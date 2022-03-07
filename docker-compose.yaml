@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    env_file: ".env"
+    environment:
+        - POSTGRES_HOST=db
+    volumes:
+    - .:/backend:rw
+    depends_on:
+    - db
+
+  db:
+    hostname: db
+    image: postgres:14-alpine
+    restart: always
+    env_file: ".env"
+    volumes:
+      - db_data:/var/lib/postgresql/data/:rw
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=example@mail.com
+      - PGADMIN_DEFAULT_PASSWORD=pgadmin
+    ports:
+      - "10050:80"
+
+
+volumes:
+  db_data:
