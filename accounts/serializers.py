@@ -1,5 +1,3 @@
-from django.utils.translation import ugettext_lazy as _
-
 from allauth.account import app_settings as allauth_settings
 from allauth.utils import email_address_exists
 from allauth.account.adapter import get_adapter
@@ -20,7 +18,7 @@ class RegisterSerializer(serializers.Serializer):
         if allauth_settings.UNIQUE_EMAIL:
             if email and email_address_exists(email):
                 raise serializers.ValidationError(
-                    _("A user is already registered with this e-mail address."))
+                    "A user is already registered with this e-mail address.")
         return email
 
     def validate_password1(self, password):
@@ -29,7 +27,7 @@ class RegisterSerializer(serializers.Serializer):
     def validate(self, data):
         if data['password1'] != data['password2']:
             raise serializers.ValidationError(
-                _("The two password fields didn't match."))
+                "The two password fields didn't match.")
         return data
 
     def get_cleaned_data(self):
