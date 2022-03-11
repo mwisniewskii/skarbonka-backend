@@ -144,16 +144,16 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
 }
 
 try:
-    from project.settings_account import *
+    from project.settings_account import *  # noqa: F403, F401
 except ImportError:
-    print('WARNING project/settings_account.py doesn\'t exist.')
+    print("WARNING project/settings_account.py doesn't exist.")
     pass
 try:
-    from project.settings_local import *
+    from project.settings_local import *    # noqa: F403, F401
 except ImportError:
     pass
