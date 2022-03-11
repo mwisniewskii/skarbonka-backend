@@ -1,0 +1,10 @@
+[flake8]
+max-line-length = 99
+exclude =   migrations,
+            settings_local_pipelines.py,
+            celery_local.py,
+            settings_local.py,
+            urls_local.py,
+            static,
+            manage.py
+ignore=D100,D104
