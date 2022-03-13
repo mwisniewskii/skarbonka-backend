@@ -5,6 +5,8 @@ from allauth.account.utils import setup_user_email
 from allauth.utils import email_address_exists
 from rest_framework import serializers
 
+from .models import CustomUser, Family
+
 
 class RegisterSerializer(serializers.Serializer):
     """Serializer for registration endpoint."""
@@ -47,7 +49,17 @@ class RegisterSerializer(serializers.Serializer):
         adapter = get_adapter()
         user = adapter.new_user(request)
         self.cleaned_data = self.get_cleaned_data()
+        family = Family.objects.create(name=self.cleaned_data['last_name'])
+        user.family = family
         adapter.save_user(request, user, self)
         setup_user_email(request, user, [])
+        family.save()
         user.save()
         return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'first_name', 'last_name', 'user_type', 'parental_control')
+        read_only_fields = ('id',)
