@@ -1,7 +1,7 @@
 # Wirtualna Skarbonka
 ## Uruchomienie
 ```bash
-# budowa projektu może zająć kilka minut
+# przed budowanie projektu należy utworzyć katalog db_data, budowa może zająć kilka minut
 docker-compose build
 # uruchomienie
 docker-compose up -d
