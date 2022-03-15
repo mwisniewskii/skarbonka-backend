@@ -1,41 +1,32 @@
 # 3rd-party
+# Django
+from django.conf import settings
+
 from allauth.account import app_settings as allauth_settings
 from allauth.account.adapter import get_adapter
+from allauth.account.forms import default_token_generator
 from allauth.account.utils import setup_user_email
-from allauth.utils import email_address_exists
+from dj_rest_auth.forms import AllAuthPasswordResetForm
+from dj_rest_auth.registration.serializers import RegisterSerializer
+from dj_rest_auth.serializers import LoginSerializer
 from rest_framework import serializers
+from rest_framework.authtoken.admin import User
 
-from .models import CustomUser, Family
+# Local
+from .models import CustomUser
+from .models import Family
 
 
-class RegisterSerializer(serializers.Serializer):
-    """Serializer for registration endpoint."""
+class CustomRegisterSerializer(RegisterSerializer):
+    """Use default serializer except don't user username."""
 
+    username = None
     email = serializers.EmailField(required=allauth_settings.EMAIL_REQUIRED)
+
     first_name = serializers.CharField(required=True, write_only=True)
     last_name = serializers.CharField(required=True, write_only=True)
     password1 = serializers.CharField(required=True, write_only=True)
     password2 = serializers.CharField(required=True, write_only=True)
-
-    def validate_email(self, email):
-        """Check the correctness of the e-mail."""
-        email = get_adapter().clean_email(email)
-        if allauth_settings.UNIQUE_EMAIL:
-            if email and email_address_exists(email):
-                raise serializers.ValidationError(
-                    'A user is already registered with this e-mail address.')
-        return email
-
-    def validate_password1(self, password):
-        """Check the correctness of the password."""
-        return get_adapter().clean_password(password)
-
-    def validate(self, data):
-        """Check the compliance of passwords."""
-        if data['password1'] != data['password2']:
-            raise serializers.ValidationError(
-                "The two password fields didn't match.")
-        return data
 
     def get_cleaned_data(self):     # noqa: D102
         return {
@@ -45,7 +36,7 @@ class RegisterSerializer(serializers.Serializer):
             'email': self.validated_data.get('email', ''),
         }
 
-    def save(self, request):    # noqa: D102
+    def save(self, request):  # noqa: D102
         adapter = get_adapter()
         user = adapter.new_user(request)
         self.cleaned_data = self.get_cleaned_data()
@@ -58,8 +49,53 @@ class RegisterSerializer(serializers.Serializer):
         return user
 
 
+class CustomLoginSerializer(LoginSerializer):
+    """Use default serializer except don't user username."""
+
+    username = None
+
+
 class UserSerializer(serializers.ModelSerializer):
-    class Meta:
+    """Family resources serializer."""
+
+    class Meta:  # noqa: D106
         model = CustomUser
         fields = ('id', 'email', 'first_name', 'last_name', 'user_type', 'parental_control')
         read_only_fields = ('id',)
+
+    def get_cleaned_data(self):     # noqa: D102
+        return {
+            'first_name': self.validated_data.get('first_name', ''),
+            'last_name': self.validated_data.get('last_name', ''),
+            'email': self.validated_data.get('email', ''),
+            'user_type': self.validated_data.get('email', ''),
+            'parental_control': self.validated_data.get('email', ''),
+        }
+
+    def password_reset(self, request):
+        """Send email with password reset."""
+        opts = {
+            'use_https': request.is_secure(),
+            'from_email': getattr(settings, 'DEFAULT_FROM_EMAIL'),
+            'request': request,
+            'token_generator': default_token_generator,
+        }
+        reset_form = AllAuthPasswordResetForm(data=self.initial_data)
+        if not reset_form.is_valid():
+            raise serializers.ValidationError(reset_form.errors)
+        reset_form.save(**opts)
+
+    def save(self, **kwargs):   # noqa: D102
+        instance = super().save(**kwargs)
+        request = self.context.get('request')
+        self.cleaned_data = self.get_cleaned_data()
+        adapter = get_adapter(request)
+        adapter.save_user(request, instance, self)
+        password = User.objects.make_random_password(64)
+        instance.set_password(password)
+        email = setup_user_email(request, instance, [])
+        email.verified = True
+        email.save()
+        instance.save()
+        self.password_reset(request)
+        return instance

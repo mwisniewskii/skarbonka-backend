@@ -8,6 +8,7 @@ from .managers import CustomUserManager
 
 class Family(models.Model):
     """Aggregation of family members."""
+
     name = models.CharField(max_length=255)
 
 
