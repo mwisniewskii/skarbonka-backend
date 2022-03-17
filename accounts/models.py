@@ -1,6 +1,9 @@
 # Django
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Sum
+
+from skarbonka.models import Transaction
 
 # Local
 from .managers import CustomUserManager
@@ -41,6 +44,12 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
     objects = CustomUserManager()
+
+    @property
+    def get_balance(self):
+        income = Transaction.objects.filter(recipient=self).aggregate(Sum('amount'))
+        outcome = Transaction.objects.filter(sender=self).aggregate(Sum('amount'))
+        return income - outcome
 
     def __str__(self):  # noqa: D105
         return self.email
