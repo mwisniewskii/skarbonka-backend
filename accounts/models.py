@@ -40,15 +40,16 @@ class CustomUser(AbstractUser):
     parental_control = models.PositiveSmallIntegerField(
         choices=ControlType.choices, default=ControlType.NONE
     )
-    balance = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
     objects = CustomUserManager()
 
     @property
-    def get_balance(self):
+    def balance(self):
         income = Transaction.objects.filter(recipient=self).aggregate(Sum('amount'))
+        income = income['amount__sum'] or 0
         outcome = Transaction.objects.filter(sender=self).aggregate(Sum('amount'))
+        outcome = outcome['amount__sum'] or 0
         return income - outcome
 
     def __str__(self):  # noqa: D105

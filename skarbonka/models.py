@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Transaction(models.Model):
-    """Models of transactions between users."""
+    """Models of user transactions."""
 
     class TransactionType(models.IntegerChoices):
         ORDINARY = 1, 'Ordinary'
@@ -10,8 +10,12 @@ class Transaction(models.Model):
         WITHDRAW = 3, 'Withdraw'
         LOAN = 4, 'Loan'
 
-    sender = models.ForeignKey('accounts.CustomUser', null=True, on_delete=models.SET_NULL, related_name='sender')
-    recipient = models.ForeignKey('accounts.CustomUser', null=True, on_delete=models.SET_NULL, related_name='recipient')
+    sender = models.ForeignKey(
+        'accounts.CustomUser', null=True, on_delete=models.SET_NULL, related_name='sender'
+    )
+    recipient = models.ForeignKey(
+        'accounts.CustomUser', null=True, on_delete=models.SET_NULL, related_name='recipient'
+    )
     datetime = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)

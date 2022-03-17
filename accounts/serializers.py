@@ -64,8 +64,9 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "user_type",
             "parental_control",
+            "balance",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "balance")
 
     def get_cleaned_data(self):  # noqa: D102
         return {
