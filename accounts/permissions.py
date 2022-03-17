@@ -9,7 +9,7 @@ class FamilyMemberPermissions(permissions.BasePermission):
         """Parent accesses to create, modify and delete members."""
         if not request.user.is_authenticated:
             return False
-        if request.method in ['POST', 'DELETE', 'PUT']:
+        if request.method in ["POST", "DELETE", "PUT"]:
             return request.user.user_type == 1
         return True
 

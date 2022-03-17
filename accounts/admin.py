@@ -10,12 +10,10 @@ class CustomUserAdmin(admin.ModelAdmin):
     """UserProfile admin."""
 
     list_display = (
-        'email',
-        'first_name',
-        'last_name',
-        'is_staff',
-        'date_joined',
+        "email",
+        "first_name",
+        "last_name",
+        "is_staff",
+        "date_joined",
     )
-    search_fields = (
-        'email',
-    )
+    search_fields = ("email",)

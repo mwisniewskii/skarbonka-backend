@@ -20,12 +20,13 @@ from django.urls import include
 from django.urls import path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('auth/', include('dj_rest_auth.urls')),
-    path('auth/registration/', include('dj_rest_auth.registration.urls')),
-    path('auth/password/reset-confirm/<uidb64>/<token>/',
-         auth_views.PasswordResetConfirmView.as_view(),
-         name='password_reset_confirm'),
-    path('', include('accounts.urls')),
-
+    path("admin/", admin.site.urls),
+    path("auth/", include("dj_rest_auth.urls")),
+    path("auth/registration/", include("dj_rest_auth.registration.urls")),
+    path(
+        "auth/password/reset-confirm/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
+    path("", include("accounts.urls")),
 ]
