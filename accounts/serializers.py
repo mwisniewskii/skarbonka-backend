@@ -1,8 +1,4 @@
 # 3rd-party
-# Django
-from django.conf import settings
-
-# 3rd-party
 from allauth.account import app_settings as allauth_settings
 from allauth.account.adapter import get_adapter
 from allauth.account.forms import default_token_generator
@@ -10,12 +6,12 @@ from allauth.account.utils import setup_user_email
 from dj_rest_auth.forms import AllAuthPasswordResetForm
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.authtoken.admin import User
 
 # Local
-from .models import CustomUser
-from .models import Family
+from .models import CustomUser, Family
 
 
 class CustomRegisterSerializer(RegisterSerializer):
@@ -68,8 +64,9 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "user_type",
             "parental_control",
+            "balance",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "balance")
 
     def get_cleaned_data(self):  # noqa: D102
         return {
