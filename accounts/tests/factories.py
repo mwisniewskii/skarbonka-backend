@@ -2,7 +2,7 @@ import factory
 
 
 class FamilyFactory(factory.django.DjangoModelFactory):
-    """"""
+
     name = factory.Faker("name")
 
     class Meta:
@@ -10,7 +10,7 @@ class FamilyFactory(factory.django.DjangoModelFactory):
 
 
 class UserFactory(factory.django.DjangoModelFactory):
-    """"""
+
     email = factory.Faker("email")
     family = factory.SubFactory(FamilyFactory)
     user_type = 1
@@ -20,5 +20,3 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'accounts.CustomUser'
-
-

@@ -9,6 +9,7 @@ from dj_rest_auth.serializers import LoginSerializer
 from django.conf import settings
 from rest_framework import serializers
 from rest_framework.authtoken.admin import User
+
 # Local
 from .models import CustomUser, Family
 

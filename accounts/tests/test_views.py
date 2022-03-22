@@ -1,13 +1,12 @@
-from rest_framework.reverse import reverse
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
 from django.test import TestCase
+from rest_framework import status
+from rest_framework.reverse import reverse
+from rest_framework.test import APIClient, APITestCase
 
 from accounts.tests.factories import UserFactory
 
 
 class UsersCollectionTest(TestCase):
-
     def setUp(self):
         self.user = UserFactory()
         self.client = APIClient()
@@ -37,7 +36,6 @@ class UsersCollectionTest(TestCase):
 
 
 class UsersDetailTest(APITestCase):
-
     def setUp(self):
         self.user1 = UserFactory()
         self.user2 = UserFactory()
