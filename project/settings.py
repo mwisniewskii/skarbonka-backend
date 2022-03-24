@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
     "rest_framework",
     "rest_framework.authtoken",
+    'django_celery_beat',
     "accounts",
     "skarbonka",
 ]
@@ -148,6 +149,12 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Celery settings
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 try:
     # Project
     from project.settings_account import *  # noqa: F403, F401
