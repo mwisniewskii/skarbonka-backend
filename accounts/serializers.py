@@ -90,17 +90,14 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(reset_form.errors)
         reset_form.save(**opts)
 
-    def save(self, **kwargs):  # noqa: D102
-        instance = super().save(**kwargs)
+    def create(self, validated_data):
         request = self.context.get("request")
-        self.cleaned_data = self.get_cleaned_data()
-        adapter = get_adapter(request)
-        adapter.save_user(request, instance, self)
         password = User.objects.make_random_password(64)
-        instance.set_password(password)
-        email = setup_user_email(request, instance, [])
+        user = CustomUser(**validated_data)
+        user.set_password(password)
+        user.save()
+        email = setup_user_email(request, user, [])
         email.verified = True
         email.save()
-        instance.save()
         self.password_reset(request)
-        return instance
+        return user
