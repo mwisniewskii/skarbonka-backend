@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    command: sh entrypoint.sh
+    env_file: ".env"
+    volumes:
+    - .:/backend:rw
+    depends_on:
+    - db
+
+  db:
+    hostname: db
+    image: postgres:14-alpine
+    restart: always
+    env_file: ".env"
+    volumes:
+      - db_data:/var/lib/postgresql/data/:rw
+
+  nginx:
+    build: ./nginx
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+
+
+volumes:
+  db_data:

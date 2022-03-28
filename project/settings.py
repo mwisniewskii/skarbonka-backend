@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "accounts",
     "skarbonka",
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
