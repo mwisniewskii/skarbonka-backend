@@ -15,7 +15,7 @@ services:
     restart: always
     env_file: ".env"
     volumes:
-      - db_data:/var/lib/postgresql/data/:rw
+      - ./db_data:/var/lib/postgresql/data/:rw
 
   nginx:
     build: ./nginx
