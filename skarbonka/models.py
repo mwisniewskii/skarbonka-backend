@@ -43,14 +43,14 @@ class Allowance(models.Model):
         'accounts.CustomUser',
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='parent',
     )
     child = models.ForeignKey(
         'accounts.CustomUser',
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='child',
     )
     created_at = models.DateTimeField(auto_now=True)
@@ -89,7 +89,7 @@ class Allowance(models.Model):
     def interval(self):
         if self.frequency == FrequencyType.DAILY:
             crontab, _ = CrontabSchedule.objects.get_or_create(
-                hour=self.execute_time.hour, minute=self.execute_time.minute
+                hour=self.execute_time.hour, minute=self.execute_time.minute, day_of_week='*'
             )
         elif self.frequency == FrequencyType.WEEKLY:
             crontab, _ = CrontabSchedule.objects.get_or_create(
@@ -104,4 +104,3 @@ class Allowance(models.Model):
                 day_of_month=self.day_of_month,
             )
         return crontab
-

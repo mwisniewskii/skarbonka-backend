@@ -28,4 +28,5 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path("", include("accounts.urls")),
+    path("", include("skarbonka.urls")),
 ]
