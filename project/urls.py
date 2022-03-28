@@ -23,12 +23,10 @@ from drf_yasg import openapi
 from django.contrib.staticfiles.urls import  staticfiles_urlpatterns
 schema_view = get_schema_view(
    openapi.Info(
-      title="Snippets API",
+      title="Skarbonka API",
       default_version='v1',
-      description="Test description",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      description="API for the university team project",
+      contact=openapi.Contact(email="miczicherry@gmail.com"),
    ),
    public=True,
    permission_classes=[permissions.AllowAny],
