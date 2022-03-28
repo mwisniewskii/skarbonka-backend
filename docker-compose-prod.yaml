@@ -23,6 +23,8 @@ services:
       - backend
     ports:
       - "80:80"
+    volumes:
+      - ./apps_static:/apps_static
 
 
 
