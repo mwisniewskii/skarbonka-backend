@@ -1,16 +1,18 @@
 from rest_framework import viewsets
 
-from accounts.permissions import FamilyMemberPermissions
-from .models import Allowance
-from .serializers import AllowanceSerializer
 from accounts.models import UserType
+from accounts.permissions import ParentCUDPermissions
+
+from .models import Allowance
+from .permissions import FamilyAllowancesPermissions
+from .serializers import AllowanceSerializer
 
 
 class AllowanceViewSet(viewsets.ModelViewSet):
-    """Family members resources."""
+    """Child allowances."""
 
     serializer_class = AllowanceSerializer
-    # permission_classes = (FamilyMemberPermissions,)
+    permission_classes = (ParentCUDPermissions, FamilyAllowancesPermissions)
 
     def get_queryset(self):
         user = self.request.user
@@ -18,5 +20,13 @@ class AllowanceViewSet(viewsets.ModelViewSet):
             return Allowance.objects.filter(parent=user)
         return Allowance.objects.filter(child=user)
 
-    def perform_create(self, serializer):  # noqa: D102
+    def perform_create(self, serializer):
         serializer.save(parent=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        resp = super().update(request, *args, **kwargs)
+        instance = self.get_object()
+        instance.task.crontab = instance.interval
+        instance.task.args = [instance.parent.pk, instance.child.pk, float(instance.amount)]
+        instance.task.save()
+        return resp

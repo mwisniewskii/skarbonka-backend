@@ -8,6 +8,7 @@ class AllowanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Allowance
+
         fields = (
             'id',
             'child',
@@ -18,4 +19,3 @@ class AllowanceSerializer(serializers.ModelSerializer):
             'day_of_week',
         )
         read_only_fields = ('id',)
-

@@ -1,7 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from django.utils import timezone
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 
 class TransactionType(models.IntegerChoices):
@@ -58,7 +58,7 @@ class Allowance(models.Model):
     frequency = models.PositiveSmallIntegerField(choices=FrequencyType.choices)
     execute_time = models.TimeField(null=True)
     day_of_month = models.IntegerField(
-        default=1, validators=[MaxValueValidator(31), MinValueValidator(1)]
+        default=1, validators=[MaxValueValidator(28), MinValueValidator(1)]
     )
     day_of_week = models.IntegerField(
         default=1, validators=[MaxValueValidator(7), MinValueValidator(1)]
@@ -73,11 +73,11 @@ class Allowance(models.Model):
     def delete(self, *args, **kwargs):
         if self.task is not None:
             self.task.delete()
-        return super(self.__class__, self).delete(*args, **kwargs)
+        return super().delete(*args, **kwargs)
 
     def setup_task(self):
         self.task = PeriodicTask.objects.create(
-            name=f'{self.get_frequency_display()} allowance from {self.parent} to {self.child}',
+            name=f'Allowance {self.pk} ',
             task='admit_allowance',
             crontab=self.interval,
             args=[self.parent.pk, self.child.pk, float(self.amount)],

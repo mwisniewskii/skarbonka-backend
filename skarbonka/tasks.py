@@ -1,6 +1,8 @@
-from accounts.models import CustomUser
-from .models import Transaction, TransactionType
 from celery import shared_task
+
+from accounts.models import CustomUser
+
+from .models import Transaction, TransactionType
 
 
 @shared_task(name='admit_allowance')

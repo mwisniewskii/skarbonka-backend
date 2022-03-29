@@ -8,6 +8,3 @@ from .models import Allowance
 def create_or_update_periodic_task(sender, instance, created, **kwargs):
     if created:
         instance.setup_task()
-    if not instance._state.adding:
-        instance.task.delete()
-        instance.setup_task()

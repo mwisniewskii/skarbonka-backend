@@ -14,7 +14,7 @@ allowanceList = AllowanceViewSet.as_view(
 allowanceDetail = AllowanceViewSet.as_view(
     {
         "get": "retrieve",
-        "put": "update",
+        "patch": "partial_update",
         "delete": "destroy",
     }
 )
