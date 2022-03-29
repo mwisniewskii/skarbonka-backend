@@ -1,14 +1,15 @@
 from django.db import models
 
 
+class TransactionType(models.IntegerChoices):
+    ORDINARY = 1, 'Ordinary'
+    DEPOSIT = 2, 'Deposit'
+    WITHDRAW = 3, 'Withdraw'
+    LOAN = 4, 'Loan'
+
+
 class Transaction(models.Model):
     """Models of user transactions."""
-
-    class TransactionType(models.IntegerChoices):
-        ORDINARY = 1, 'Ordinary'
-        DEPOSIT = 2, 'Deposit'
-        WITHDRAW = 3, 'Withdraw'
-        LOAN = 4, 'Loan'
 
     sender = models.ForeignKey(
         'accounts.CustomUser', null=True, on_delete=models.SET_NULL, related_name='sender'
