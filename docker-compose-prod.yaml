@@ -26,6 +26,29 @@ services:
     volumes:
       - ./apps_static:/apps_static
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  celery:
+    build: .
+    command: watchmedo auto-restart -d . -p '*.py' -- celery -A project worker -l info
+    env_file: ".env"
+    volumes:
+      - .:/backend
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: watchmedo auto-restart -d . -p '*.py' -- celery -A project beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file: ".env"
+    volumes:
+      - .:/backend
+    depends_on:
+      - db
+      - redis
 
 
 volumes:

@@ -20,16 +20,16 @@ from django.urls import include, path, re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from django.contrib.staticfiles.urls import  staticfiles_urlpatterns
+
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Skarbonka API",
-      default_version='v1',
-      description="API for the university team project",
-      contact=openapi.Contact(email="miczicherry@gmail.com"),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny],
+    openapi.Info(
+        title="Skarbonka API",
+        default_version='v1',
+        description="API for the university team project",
+        contact=openapi.Contact(email="miczicherry@gmail.com"),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
 )
 
 urlpatterns = [
