@@ -7,3 +7,6 @@ class SkarbonkaConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "skarbonka"
+
+    def ready(self):
+        from skarbonka import signals

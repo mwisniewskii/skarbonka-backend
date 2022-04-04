@@ -4,7 +4,7 @@ from rest_framework.generics import get_object_or_404
 
 # Local
 from .models import CustomUser
-from .permissions import FamilyMemberPermissions
+from .permissions import FamilyResourcesPermissions, ParentCUDPermissions
 from .serializers import UserSerializer
 
 
@@ -12,7 +12,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """Family members resources."""
 
     serializer_class = UserSerializer
-    permission_classes = (FamilyMemberPermissions,)
+    permission_classes = (FamilyResourcesPermissions, ParentCUDPermissions)
 
     def get_queryset(self):  # noqa: D102
         user = self.request.user
