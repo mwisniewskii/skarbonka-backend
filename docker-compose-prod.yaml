@@ -1,0 +1,55 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    command: sh entrypoint.sh
+    env_file: ".env"
+    volumes:
+    - .:/backend:rw
+    depends_on:
+    - db
+
+  db:
+    hostname: db
+    image: postgres:14-alpine
+    restart: always
+    env_file: ".env"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data/:rw
+
+  nginx:
+    build: ./nginx
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./apps_static:/apps_static
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  celery:
+    build: .
+    command: watchmedo auto-restart -d . -p '*.py' -- celery -A project worker -l info
+    env_file: ".env"
+    volumes:
+      - .:/backend
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: watchmedo auto-restart -d . -p '*.py' -- celery -A project beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file: ".env"
+    volumes:
+      - .:/backend
+    depends_on:
+      - db
+      - redis
+
+
+volumes:
+  db_data:
