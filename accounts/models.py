@@ -9,6 +9,11 @@ from skarbonka.models import Transaction
 from .managers import CustomUserManager
 
 
+class UserType(models.IntegerChoices):
+    PARENT = 1, "Parent"
+    CHILD = 2, "Child"
+
+
 class Family(models.Model):
     """Aggregation of family members."""
 
@@ -17,10 +22,6 @@ class Family(models.Model):
 
 class CustomUser(AbstractUser):
     """Custom user model with e-mail as unique identifiers."""
-
-    class UserType(models.IntegerChoices):
-        PARENT = 1, "Parent"
-        CHILD = 2, "Child"
 
     class ControlType(models.IntegerChoices):
         NONE = 1, "None"
