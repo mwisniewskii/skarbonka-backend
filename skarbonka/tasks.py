@@ -1,8 +1,14 @@
+# 3rd-party
 from celery import shared_task
 
+# Project
 from accounts.models import CustomUser
 
-from .models import Notifications, NotificationType, Transaction, TransactionType
+# Local
+from .models import Notification
+from .models import NotificationType
+from .models import Transaction
+from .models import TransactionType
 
 
 @shared_task(name='admit_allowance')
@@ -19,7 +25,7 @@ def admit_allowance(sender_id, recipient_id, amount):
         failed=transfer_failed,
     )
     if transfer_failed:
-        Notifications.objects.create(
+        Notification.objects.create(
             recipient=sender,
             content=f'Nie udało się przelać kieszonkowego dla {recipient}',
             resource=NotificationType.TRANSACTION,

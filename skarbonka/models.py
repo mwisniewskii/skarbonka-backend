@@ -1,7 +1,12 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+# Django
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
+
+# 3rd-party
+from django_celery_beat.models import CrontabSchedule
+from django_celery_beat.models import PeriodicTask
 
 
 class TransactionType(models.IntegerChoices):
@@ -113,7 +118,7 @@ class Allowance(models.Model):
         return crontab
 
 
-class Notifications(models.Model):
+class Notification(models.Model):
 
     recipient = models.ForeignKey(
         'accounts.CustomUser',

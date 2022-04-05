@@ -1,7 +1,9 @@
+# 3rd-party
 from rest_framework import serializers
 
+# Local
 from .models import Allowance
-from .models import Notifications
+from .models import Notification
 
 
 class AllowanceSerializer(serializers.ModelSerializer):
@@ -26,7 +28,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     """Allowance for a child serializer."""
 
     class Meta:
-        model = Notifications
+        model = Notification
 
         fields = (
             'content',

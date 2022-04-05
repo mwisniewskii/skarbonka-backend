@@ -2,7 +2,8 @@
 from django.urls import path
 
 # Local
-from .views import AllowanceViewSet, NotificationViewSet
+from .views import AllowanceViewSet
+from .views import NotificationViewSet
 
 allowanceList = AllowanceViewSet.as_view(
     {
@@ -27,5 +28,5 @@ notificationsList = NotificationViewSet.as_view(
 urlpatterns = [
     path("allowances/", allowanceList, name="allowances"),
     path("allowances/<int:pk>/", allowanceDetail, name="allowance"),
-    path("notifications/", notificationsList, name="notification")
+    path("notifications/", notificationsList, name="notification"),
 ]

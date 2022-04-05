@@ -1,6 +1,9 @@
+# Django
 from django.contrib import admin
 
-from .models import Allowance, Transaction
+# Local
+from .models import Allowance
+from .models import Transaction
 
 
 @admin.register(Allowance)

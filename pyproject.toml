@@ -48,21 +48,3 @@ extend-exclude =  '''
   | migrations
 )/
 '''
-
-[tool.isort]
-profile = "black"
-atomic = true
-combine_star = true
-honor_noqa = true
-lines_before_imports = 1
-order_by_type=1
-default_section = "THIRDPARTY"
-import_heading_stdlib = "Standard Library"
-import_heading_django = "Django"
-import_heading_thirdparty = "3rd-Party"
-import_heading_firstparty = "Project"
-import_heading_localfolder = "Local"
-known_django = "django"
-known_first_party=["accounts", "project", "skarbonka"]
-sections = ["STDLIB","DJANGO","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
-skip=["migrations", "manage.py"]

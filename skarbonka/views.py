@@ -1,12 +1,19 @@
-from rest_framework import viewsets
+# Django
 from django.db.models import Q
 
+# 3rd-party
+from rest_framework import viewsets
+
+# Project
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
-from .models import Allowance, Notifications
+# Local
+from .models import Allowance
+from .models import Notification
 from .permissions import FamilyAllowancesPermissions
-from .serializers import AllowanceSerializer, NotificationSerializer
+from .serializers import AllowanceSerializer
+from .serializers import NotificationSerializer
 
 
 class AllowanceViewSet(viewsets.ModelViewSet):
@@ -40,5 +47,5 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Notifications.objects.filter(Q(recipient=user) | Q(recipient=None))
+        queryset = Notification.objects.filter(Q(recipient=user) | Q(recipient=None))
         return queryset.order_by('-created_at')

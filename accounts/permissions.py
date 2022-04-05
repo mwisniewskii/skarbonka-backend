@@ -1,6 +1,7 @@
 # 3rd-party
 from rest_framework import permissions
 
+# Project
 from accounts.models import UserType
 
 
