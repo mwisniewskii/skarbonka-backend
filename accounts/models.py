@@ -47,11 +47,11 @@ class CustomUser(AbstractUser):
 
     @property
     def balance(self):
-        income = Transaction.objects.filter(recipient=self).aggregate(Sum('amount'))
+        income = Transaction.objects.filter(recipient=self, failed=False).aggregate(Sum('amount'))
         income = income['amount__sum'] or 0
-        outcome = Transaction.objects.filter(sender=self).aggregate(Sum('amount'))
+        outcome = Transaction.objects.filter(sender=self, failed=False).aggregate(Sum('amount'))
         outcome = outcome['amount__sum'] or 0
         return income - outcome
 
     def __str__(self):  # noqa: D105
-        return self.email
+        return f'{self.first_name} {self.last_name}'

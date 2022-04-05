@@ -18,6 +18,12 @@ class FrequencyType(models.IntegerChoices):
     MONTHLY = 3, 'Monthly'
 
 
+class NotificationType(models.IntegerChoices):
+    NONE = 1, 'None'
+    TRANSACTION = 2, 'Transaction'
+    ALLOWANCE = 3, 'Allowance'
+
+
 class Transaction(models.Model):
     """Models of user transactions."""
 
@@ -34,6 +40,7 @@ class Transaction(models.Model):
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
+    failed = models.BooleanField(default=False)
 
 
 class Allowance(models.Model):
@@ -104,3 +111,18 @@ class Allowance(models.Model):
                 day_of_month=self.day_of_month,
             )
         return crontab
+
+
+class Notifications(models.Model):
+
+    recipient = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='receiver',
+    )
+    content = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now=True)
+    resource = models.PositiveSmallIntegerField(choices=NotificationType.choices, default=1)
+    target = models.PositiveIntegerField(null=True, blank=True)
