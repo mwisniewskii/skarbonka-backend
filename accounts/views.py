@@ -4,7 +4,8 @@ from rest_framework.generics import get_object_or_404
 
 # Local
 from .models import CustomUser
-from .permissions import FamilyResourcesPermissions, ParentCUDPermissions
+from .permissions import FamilyResourcesPermissions
+from .permissions import ParentCUDPermissions
 from .serializers import UserSerializer
 
 

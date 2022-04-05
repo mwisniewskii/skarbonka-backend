@@ -9,4 +9,5 @@ class SkarbonkaConfig(AppConfig):
     name = "skarbonka"
 
     def ready(self):
+        # Project
         from skarbonka import signals

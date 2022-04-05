@@ -1,7 +1,12 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+# Django
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
+
+# 3rd-party
+from django_celery_beat.models import CrontabSchedule
+from django_celery_beat.models import PeriodicTask
 
 
 class TransactionType(models.IntegerChoices):
@@ -16,6 +21,12 @@ class FrequencyType(models.IntegerChoices):
     DAILY = 1, 'Daily'
     WEEKLY = 2, 'Weekly'
     MONTHLY = 3, 'Monthly'
+
+
+class NotificationType(models.IntegerChoices):
+    NONE = 1, 'None'
+    TRANSACTION = 2, 'Transaction'
+    ALLOWANCE = 3, 'Allowance'
 
 
 class Transaction(models.Model):
@@ -34,6 +45,7 @@ class Transaction(models.Model):
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
+    failed = models.BooleanField(default=False)
 
 
 class Allowance(models.Model):
@@ -104,3 +116,18 @@ class Allowance(models.Model):
                 day_of_month=self.day_of_month,
             )
         return crontab
+
+
+class Notification(models.Model):
+
+    recipient = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='receiver',
+    )
+    content = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now=True)
+    resource = models.PositiveSmallIntegerField(choices=NotificationType.choices, default=1)
+    target = models.PositiveIntegerField(null=True, blank=True)
