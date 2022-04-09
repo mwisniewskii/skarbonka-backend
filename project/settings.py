@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 # Standard Library
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -152,6 +153,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+    )
+}
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = 'auth-token'
+JWT_AUTH_REFRESH_COOKIE = 'refresh-token'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
 }
 
 # Celery settings
