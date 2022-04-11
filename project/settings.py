@@ -49,14 +49,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     'django_celery_beat',
+    'drf_yasg',
+    'corsheaders',
     "accounts",
     "skarbonka",
-    'drf_yasg',
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -131,9 +133,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-SESSION_COOKIE_AGE = 15 * 60
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_SAVE_EVERY_REQUEST = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
