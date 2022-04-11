@@ -72,3 +72,7 @@ class LoanParentSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'created_at', 'amount', 'reason', 'borrower')
 
+
+class LoanSampleSerializer(serializers.Serializer):
+    child = LoanChildSerializer(many=True)
+    parent = LoanParentSerializer(many=True)

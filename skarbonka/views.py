@@ -2,7 +2,10 @@
 from django.db.models import Q
 
 # 3rd-party
-from rest_framework import viewsets
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, status
 
 # Project
 from accounts.models import UserType
@@ -16,10 +19,11 @@ from .permissions import AuthenticatedPermissions
 from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
 from .permissions import LoanObjectPermissions
-from .serializers import AllowanceSerializer
+from .serializers import AllowanceSerializer, LoanSampleSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import NotificationSerializer
+from .swagger_schemas import loan_schema
 
 
 class AllowanceViewSet(viewsets.ModelViewSet):
@@ -57,6 +61,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
 
+@method_decorator(name='list', decorator=loan_schema)
+@method_decorator(name='retrieve', decorator=loan_schema)
+@method_decorator(name='partial_update', decorator=loan_schema)
 class LoanViewSet(viewsets.ModelViewSet):
 
     permission_classes = (AuthenticatedPermissions, ChildCreatePermissions, LoanObjectPermissions)
@@ -70,6 +77,7 @@ class LoanViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(borrower=self.request.user)
 
+    @loan_schema
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
 
@@ -79,6 +87,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         return LoanChildSerializer
 
     def update(self, request, *args, **kwargs):
+        """Set payment date and status."""
         resp = super().update(request, *args, **kwargs)
 
         return resp

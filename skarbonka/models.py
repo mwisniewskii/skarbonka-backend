@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 # 3rd-party
-from django_celery_beat.models import CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
 
@@ -27,6 +27,7 @@ class NotificationType(models.IntegerChoices):
     NONE = 1, 'None'
     TRANSACTION = 2, 'Transaction'
     ALLOWANCE = 3, 'Allowance'
+    LOAN = 4, 'Loan'
 
 
 class LoanStatus(models.IntegerChoices):
@@ -54,6 +55,12 @@ class Transaction(models.Model):
     )
     failed = models.BooleanField(default=False)
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
+
+    def save(self, *args, **kwargs):
+        super().save(self, *args, **kwargs)
+        if self.sender.balance < self.amount and not self.failed:
+            self.failed = True
+            self.save()
 
 
 class Allowance(models.Model):
@@ -161,4 +168,10 @@ class Loan(models.Model):
     status = models.PositiveSmallIntegerField(choices=LoanStatus.choices, default=LoanStatus.PENDING)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateTimeField(null=True, blank=True)
+    notify = models.OneToOneField(
+        ClockedSchedule,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 

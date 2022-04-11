@@ -6,6 +6,7 @@ from .views import AllowanceViewSet
 from .views import LoanViewSet
 from .views import NotificationViewSet
 
+
 allowanceList = AllowanceViewSet.as_view(
     {
         "get": "list",
