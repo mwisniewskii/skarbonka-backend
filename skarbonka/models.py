@@ -29,6 +29,13 @@ class NotificationType(models.IntegerChoices):
     ALLOWANCE = 3, 'Allowance'
 
 
+class LoanStatus(models.IntegerChoices):
+    PENDING = 1, 'Pending'
+    GRANTED = 2, 'Granted'
+    DECLINED = 3, 'Declined'
+    PAID = 4, 'Paid off'
+
+
 class Transaction(models.Model):
     """Models of user transactions."""
 
@@ -46,6 +53,7 @@ class Transaction(models.Model):
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
     failed = models.BooleanField(default=False)
+    loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class Allowance(models.Model):
@@ -131,3 +139,26 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     resource = models.PositiveSmallIntegerField(choices=NotificationType.choices, default=1)
     target = models.PositiveIntegerField(null=True, blank=True)
+
+
+class Loan(models.Model):
+    created_at = models.DateTimeField(auto_now=True)
+    reason = models.CharField(max_length=255)
+    lender = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='lender',
+    )
+    borrower = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='borrower',
+    )
+    status = models.PositiveSmallIntegerField(choices=LoanStatus.choices, default=LoanStatus.PENDING)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    payment_date = models.DateTimeField(null=True, blank=True)
+

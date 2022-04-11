@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 # Local
 from .models import Allowance
+from .models import Loan
 from .models import Notification
 
 
@@ -36,3 +37,38 @@ class NotificationSerializer(serializers.ModelSerializer):
             'resource',
             'target',
         )
+
+
+class LoanChildSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Loan
+
+        fields = (
+            'id',
+            'reason',
+            'lender',
+            'amount',
+            'status',
+            'payment_date',
+            'created_at',
+        )
+        read_only_fields = ('id', 'created_at', 'payment_date', 'status')
+
+
+class LoanParentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Loan
+
+        fields = (
+            'id',
+            'reason',
+            'borrower',
+            'amount',
+            'status',
+            'payment_date',
+            'created_at',
+        )
+        read_only_fields = ('id', 'created_at', 'amount', 'reason', 'borrower')
+
