@@ -17,6 +17,7 @@ django-celery-beat = "^2.2.1"
 watchdog = "^2.1.6"
 PyYAML = "^6.0"
 drf-yasg = "^1.20.0"
+djangorestframework-simplejwt = "^5.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.0"
