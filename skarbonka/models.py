@@ -7,6 +7,7 @@ from django.utils import timezone
 # 3rd-party
 from django_celery_beat.models import CrontabSchedule, ClockedSchedule
 from django_celery_beat.models import PeriodicTask
+from model_utils import FieldTracker
 
 
 class TransactionType(models.IntegerChoices):
@@ -174,4 +175,5 @@ class Loan(models.Model):
         null=True,
         blank=True,
     )
+    status_tracker = FieldTracker(fields=['status'])
 

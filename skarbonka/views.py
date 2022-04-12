@@ -89,5 +89,4 @@ class LoanViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """Set payment date and status."""
         resp = super().update(request, *args, **kwargs)
-
         return resp

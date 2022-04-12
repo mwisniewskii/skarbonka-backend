@@ -2,7 +2,7 @@
 from django.contrib import admin
 
 # Local
-from .models import Allowance
+from .models import Allowance, Notification
 from .models import Loan
 from .models import Transaction
 

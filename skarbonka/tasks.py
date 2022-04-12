@@ -1,11 +1,16 @@
 # 3rd-party
+from datetime import timedelta
+
 from celery import shared_task
 
 # Project
+from django.utils import timezone
+from django_celery_beat.models import PeriodicTask, ClockedSchedule
+
 from accounts.models import CustomUser
 
 # Local
-from .models import Notification
+from .models import Notification, Loan
 from .models import NotificationType
 from .models import Transaction
 from .models import TransactionType
@@ -32,10 +37,23 @@ def admit_allowance(sender_id, recipient_id, amount):
 
 
 @shared_task(name='loan_payment_date_notification')
-def loan_payment_date_notification(borrower_id, loan_id):
+def loan_payment_date_notification(payment_date, borrower_id, loan_id):
+    days_to_pay = payment_date - timezone.now()
     Notification.objects.create(
         recipient_id=borrower_id,
-        content=f'Za 3 dni upływa termin spłaty pożyczki.',
+        content=f'Za {days_to_pay.days} dni upływa termin spłaty pożyczki.',
         resource=NotificationType.LOAN,
         target=loan_id,
     )
+    notify_days = days_to_pay.days / 2
+    if notify_days > 0:
+        clocked_time = payment_date - timedelta(notify_days)
+        loan = Loan.objects.get(id=loan_id)
+        loan.notify = PeriodicTask.objects.create(
+            name=f'Payment notfify {loan_id} ',
+            task='admit_allowance',
+            clocked=ClockedSchedule.objects.create(clocked_time=clocked_time),
+            args=[payment_date, borrower_id, loan_id],
+            start_time=timezone.now(),
+        )
+        loan.save()
