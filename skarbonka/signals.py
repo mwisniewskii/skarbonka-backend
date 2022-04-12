@@ -1,14 +1,23 @@
-# Django
+# Standard Library
 from datetime import timedelta
 
+# Django
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
+
+# 3rd-party
+from django_celery_beat.models import ClockedSchedule
+from django_celery_beat.models import PeriodicTask
 
 # Local
-from django.utils import timezone
-from django_celery_beat.models import ClockedSchedule, PeriodicTask
-
-from .models import Allowance, Loan, Notification, LoanStatus, NotificationType, Transaction, TransactionType
+from .models import Allowance
+from .models import Loan
+from .models import LoanStatus
+from .models import Notification
+from .models import NotificationType
+from .models import Transaction
+from .models import TransactionType
 
 
 @receiver(post_save, sender=Allowance)
@@ -43,7 +52,9 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
             instance.notify = PeriodicTask.objects.create(
                 name=f'Payment notfify {instance.pk} ',
                 task='admit_allowance',
-                clocked=ClockedSchedule.objects.create(clocked_time=instance.payment_date - timedelta(7)),
+                clocked=ClockedSchedule.objects.create(
+                    clocked_time=instance.payment_date - timedelta(7)
+                ),
                 args=[],
                 start_time=timezone.now(),
             )
@@ -57,9 +68,8 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
             recipient = instance.lender
 
         Notification.objects.create(
-                recipient=recipient,
-                content=msg,
-                resource=NotificationType.LOAN,
-                target=instance.id,
+            recipient=recipient,
+            content=msg,
+            resource=NotificationType.LOAN,
+            target=instance.id,
         )
-

@@ -5,6 +5,7 @@ from rest_framework import serializers
 from .models import Allowance
 from .models import Loan
 from .models import Notification
+from .models import Transaction
 
 
 class AllowanceSerializer(serializers.ModelSerializer):
@@ -40,7 +41,6 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class LoanChildSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Loan
 
@@ -57,7 +57,6 @@ class LoanChildSerializer(serializers.ModelSerializer):
 
 
 class LoanParentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Loan
 

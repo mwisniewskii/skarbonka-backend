@@ -2,10 +2,12 @@
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 
 # 3rd-party
-from django_celery_beat.models import CrontabSchedule, ClockedSchedule
+from django_celery_beat.models import ClockedSchedule
+from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
 from model_utils import FieldTracker
 
@@ -166,7 +168,9 @@ class Loan(models.Model):
         on_delete=models.SET_NULL,
         related_name='borrower',
     )
-    status = models.PositiveSmallIntegerField(choices=LoanStatus.choices, default=LoanStatus.PENDING)
+    status = models.PositiveSmallIntegerField(
+        choices=LoanStatus.choices, default=LoanStatus.PENDING
+    )
     amount = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateTimeField(null=True, blank=True)
     notify = models.OneToOneField(
@@ -177,3 +181,8 @@ class Loan(models.Model):
     )
     status_tracker = FieldTracker(fields=['status'])
 
+    @property
+    def paid(self) -> bool:
+        payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
+        payoff = payoff['amount__sum'] or 0
+        return self.amount <= payoff

@@ -1,16 +1,20 @@
-# 3rd-party
+# Standard Library
 from datetime import timedelta
 
+# Django
+from django.utils import timezone
+
+# 3rd-party
 from celery import shared_task
+from django_celery_beat.models import ClockedSchedule
+from django_celery_beat.models import PeriodicTask
 
 # Project
-from django.utils import timezone
-from django_celery_beat.models import PeriodicTask, ClockedSchedule
-
 from accounts.models import CustomUser
 
 # Local
-from .models import Notification, Loan
+from .models import Loan
+from .models import Notification
 from .models import NotificationType
 from .models import Transaction
 from .models import TransactionType
@@ -51,7 +55,7 @@ def loan_payment_date_notification(payment_date, borrower_id, loan_id):
         loan = Loan.objects.get(id=loan_id)
         loan.notify = PeriodicTask.objects.create(
             name=f'Payment notfify {loan_id} ',
-            task='admit_allowance',
+            task='loan_payment_date_notification',
             clocked=ClockedSchedule.objects.create(clocked_time=clocked_time),
             args=[payment_date, borrower_id, loan_id],
             start_time=timezone.now(),

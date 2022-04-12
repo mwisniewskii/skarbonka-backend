@@ -1,11 +1,10 @@
 # Django
 from django.db.models import Q
+from django.utils.decorators import method_decorator
 
 # 3rd-party
-from django.utils.decorators import method_decorator
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, status
+from rest_framework import viewsets
+
 
 # Project
 from accounts.models import UserType
@@ -15,11 +14,10 @@ from accounts.permissions import ParentCUDPermissions
 from .models import Allowance
 from .models import Loan
 from .models import Notification
-from .permissions import AuthenticatedPermissions
+from .permissions import AuthenticatedPermissions, LoanObjectPermissions
 from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
-from .permissions import LoanObjectPermissions
-from .serializers import AllowanceSerializer, LoanSampleSerializer
+from .serializers import AllowanceSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import NotificationSerializer
@@ -64,9 +62,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
 @method_decorator(name='list', decorator=loan_schema)
 @method_decorator(name='retrieve', decorator=loan_schema)
 @method_decorator(name='partial_update', decorator=loan_schema)
+@method_decorator(name='create', decorator=loan_schema)
 class LoanViewSet(viewsets.ModelViewSet):
 
-    permission_classes = (AuthenticatedPermissions, ChildCreatePermissions, LoanObjectPermissions)
+    permission_classes = (
+        AuthenticatedPermissions,
+        ChildCreatePermissions,
+        LoanObjectPermissions,
+    )
 
     def get_queryset(self):
         user = self.request.user
@@ -77,10 +80,6 @@ class LoanViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(borrower=self.request.user)
 
-    @loan_schema
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-
     def get_serializer_class(self):
         if self.request.user.user_type == UserType.PARENT:
             return LoanParentSerializer
@@ -90,3 +89,6 @@ class LoanViewSet(viewsets.ModelViewSet):
         """Set payment date and status."""
         resp = super().update(request, *args, **kwargs)
         return resp
+
+
+

@@ -18,13 +18,15 @@ class FamilyAllowancesPermissions(permissions.BasePermission):
 
 
 class LoanObjectPermissions(permissions.BasePermission):
-
     def has_object_permission(self, request, view, obj):
         return (
-            obj.lender == request.user
-            or obj.borrower == request.user
-            or request.user.is_superuser
+            obj.lender == request.user or obj.borrower == request.user or request.user.is_superuser
         )
+
+
+class LoanObjectBorrowerPermissions(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.borrower == request.user or request.user.is_superuser
 
 
 class AuthenticatedPermissions(permissions.BasePermission):

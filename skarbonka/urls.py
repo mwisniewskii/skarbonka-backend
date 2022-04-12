@@ -1,3 +1,6 @@
+# Standard Library
+import platform
+
 # Django
 from django.urls import path
 
@@ -5,7 +8,6 @@ from django.urls import path
 from .views import AllowanceViewSet
 from .views import LoanViewSet
 from .views import NotificationViewSet
-
 
 allowanceList = AllowanceViewSet.as_view(
     {
@@ -39,6 +41,7 @@ loanDetail = LoanViewSet.as_view(
         "patch": "partial_update",
     }
 )
+
 
 urlpatterns = [
     path("allowances/", allowanceList, name="allowances"),
