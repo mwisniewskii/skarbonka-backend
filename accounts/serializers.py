@@ -1,3 +1,6 @@
+# Django
+from django.conf import settings
+
 # 3rd-party
 from allauth.account import app_settings as allauth_settings
 from allauth.account.adapter import get_adapter
@@ -6,12 +9,12 @@ from allauth.account.utils import setup_user_email
 from dj_rest_auth.forms import AllAuthPasswordResetForm
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
-from django.conf import settings
 from rest_framework import serializers
 from rest_framework.authtoken.admin import User
 
 # Local
-from .models import CustomUser, Family
+from .models import CustomUser
+from .models import Family
 
 
 class CustomRegisterSerializer(RegisterSerializer):
@@ -90,17 +93,14 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(reset_form.errors)
         reset_form.save(**opts)
 
-    def save(self, **kwargs):  # noqa: D102
-        instance = super().save(**kwargs)
+    def create(self, validated_data):
         request = self.context.get("request")
-        self.cleaned_data = self.get_cleaned_data()
-        adapter = get_adapter(request)
-        adapter.save_user(request, instance, self)
         password = User.objects.make_random_password(64)
-        instance.set_password(password)
-        email = setup_user_email(request, instance, [])
+        user = CustomUser(**validated_data)
+        user.set_password(password)
+        user.save()
+        email = setup_user_email(request, user, [])
         email.verified = True
         email.save()
-        instance.save()
         self.password_reset(request)
-        return instance
+        return user

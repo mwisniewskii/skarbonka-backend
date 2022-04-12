@@ -11,11 +11,23 @@ psycopg2-binary = "^2.9.3"
 djangorestframework = "3.13.1"
 django-allauth = "^0.49.0"
 dj-rest-auth = "^2.2.3"
+celery = "^5.2.3"
+redis = "^4.2.0"
+django-celery-beat = "^2.2.1"
+watchdog = "^2.1.6"
+PyYAML = "^6.0"
+drf-yasg = "^1.20.0"
+djangorestframework-simplejwt = "^5.1.0"
+django-cors-headers = "^3.11.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.0"
+pytest-django = "^4.5.2"
+pytest-cov = "^3.0.0"
 black = "^22.1.0"
 isort = "^5.10.1"
+pytest-faker = "^2.0.0"
+factory-boy = "^3.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -38,21 +50,3 @@ extend-exclude =  '''
   | migrations
 )/
 '''
-
-[tool.isort]
-profile = "black"
-atomic = true
-combine_star = true
-honor_noqa = true
-lines_before_imports = 1
-order_by_type=1
-default_section = "THIRDPARTY"
-import_heading_stdlib = "Standard Library"
-import_heading_django = "Django"
-import_heading_thirdparty = "3rd-Party"
-import_heading_firstparty = "Project"
-import_heading_localfolder = "Local"
-known_django = "django"
-known_first_party=["accounts", "project", "skarbonka"]
-sections = ["STDLIB","DJANGO","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
-skip=["migrations", "manage.py"]
