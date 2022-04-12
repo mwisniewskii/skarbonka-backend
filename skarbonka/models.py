@@ -29,6 +29,13 @@ class NotificationType(models.IntegerChoices):
     ALLOWANCE = 3, 'Allowance'
 
 
+class TransactionType(models.IntegerChoices):
+    ORDINARY = 1, 'Ordinary'
+    DEPOSIT = 2, 'Deposit'
+    WITHDRAW = 3, 'Withdraw'
+    LOAN = 4, 'Loan'
+
+
 class Transaction(models.Model):
     """Models of user transactions."""
 

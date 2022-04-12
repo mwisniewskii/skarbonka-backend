@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 # Local
+from .models import Transaction
 from .models import Allowance
 from .models import Notification
 
@@ -36,3 +37,9 @@ class NotificationSerializer(serializers.ModelSerializer):
             'resource',
             'target',
         )
+        
+class DepositSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ("amount",)
+

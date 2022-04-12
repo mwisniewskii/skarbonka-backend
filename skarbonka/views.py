@@ -1,3 +1,4 @@
+
 # Django
 from django.db.models import Q
 
@@ -11,9 +12,12 @@ from accounts.permissions import ParentCUDPermissions
 # Local
 from .models import Allowance
 from .models import Notification
+from .models import Transaction, TransactionType
 from .permissions import FamilyAllowancesPermissions
+from .permissions import AuthenticatedPermissions
 from .serializers import AllowanceSerializer
 from .serializers import NotificationSerializer
+from .serializers import DepositSerializer
 
 
 class AllowanceViewSet(viewsets.ModelViewSet):
@@ -49,3 +53,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Notification.objects.filter(Q(recipient=user) | Q(recipient=None))
         return queryset.order_by('-created_at')
+      
+class DepositViewSet(viewsets.ModelViewSet):
+
+    serializer_class = DepositSerializer
+    permission_classes = (AuthenticatedPermissions,)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            recipient=self.request.user, title='deposit', types=TransactionType.DEPOSIT
+        )
+
