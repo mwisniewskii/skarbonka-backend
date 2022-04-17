@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 # Local
+from .models import Transaction
 from .models import Allowance
 from .models import Loan
 from .models import Notification
@@ -39,6 +40,11 @@ class NotificationSerializer(serializers.ModelSerializer):
             'target',
         )
 
+class DepositSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ("amount",)
+
 
 class LoanChildSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,3 +81,4 @@ class LoanParentSerializer(serializers.ModelSerializer):
 class LoanSampleSerializer(serializers.Serializer):
     child = LoanChildSerializer(many=True)
     parent = LoanParentSerializer(many=True)
+

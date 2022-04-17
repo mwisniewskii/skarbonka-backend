@@ -8,7 +8,6 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 REST_AUTH_REGISTER_SERIALIZERS = {
     "REGISTER_SERIALIZER": "accounts.serializers.CustomRegisterSerializer",
 }

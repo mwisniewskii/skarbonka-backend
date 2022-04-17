@@ -49,14 +49,18 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     'django_celery_beat',
+    'drf_yasg',
+    'corsheaders',
     "accounts",
     "skarbonka",
-    'drf_yasg',
+
+
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -117,6 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Internationalization
@@ -147,6 +152,9 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SITE_ID = 1
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

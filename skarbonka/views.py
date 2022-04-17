@@ -5,7 +5,6 @@ from django.utils.decorators import method_decorator
 # 3rd-party
 from rest_framework import viewsets
 
-
 # Project
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
@@ -14,13 +13,16 @@ from accounts.permissions import ParentCUDPermissions
 from .models import Allowance
 from .models import Loan
 from .models import Notification
+from .models import Transaction, TransactionType
 from .permissions import AuthenticatedPermissions, LoanObjectPermissions
 from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
+from .permissions import AuthenticatedPermissions
 from .serializers import AllowanceSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import NotificationSerializer
+from .serializers import DepositSerializer
 from .swagger_schemas import loan_schema
 
 
@@ -57,6 +59,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Notification.objects.filter(Q(recipient=user) | Q(recipient=None))
         return queryset.order_by('-created_at')
+
+class DepositViewSet(viewsets.ModelViewSet):
+
+    serializer_class = DepositSerializer
+    permission_classes = (AuthenticatedPermissions,)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            recipient=self.request.user, title='deposit', types=TransactionType.DEPOSIT
+        )
+
 
 
 @method_decorator(name='list', decorator=loan_schema)

@@ -370,6 +370,17 @@ python-versions = "*"
 Django = ">=2.0.1"
 
 [[package]]
+name = "django-cors-headers"
+version = "3.11.0"
+description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+Django = ">=2.2"
+
+[[package]]
 name = "django-timezone-field"
 version = "4.2.3"
 description = "A Django app providing database and form fields for pytz timezone objects."
@@ -970,7 +981,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "da11a9926afcb6f4719892601892e4dd7caf13864dcb567b3c72079046ce2542"
+content-hash = "ca425da23355b150c880c7ee364fdb367c868e505432842e07900c514dabec31"
 
 [metadata.files]
 amqp = [
@@ -1204,6 +1215,10 @@ django-celery-beat = [
 django-model-utils = [
     {file = "django-model-utils-4.2.0.tar.gz", hash = "sha256:e7a95e102f9c9653427eadab980d5d59e1dea972913b9c9e01ac37f86bba0ddf"},
     {file = "django_model_utils-4.2.0-py3-none-any.whl", hash = "sha256:a768a25c80514e0ad4e4a6f9c02c44498985f36c5dfdea47b5b1e8cf994beba6"},
+]
+django-cors-headers = [
+    {file = "django-cors-headers-3.11.0.tar.gz", hash = "sha256:eb98389bf7a2afc5d374806af4a9149697e3a6955b5a2dc2bf049f7d33647456"},
+    {file = "django_cors_headers-3.11.0-py3-none-any.whl", hash = "sha256:a22be2befd4069c4fc174f11cf067351df5c061a3a5f94a01650b4e928b0372b"},
 ]
 django-timezone-field = [
     {file = "django-timezone-field-4.2.3.tar.gz", hash = "sha256:5dd5bd9249382bef8847d3e7e4c32b7be182a4b538f354130d1252ed228892f8"},

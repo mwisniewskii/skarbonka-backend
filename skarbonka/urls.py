@@ -5,6 +5,7 @@ import platform
 from django.urls import path
 
 # Local
+from .views import DepositViewSet
 from .views import AllowanceViewSet
 from .views import LoanViewSet
 from .views import NotificationViewSet
@@ -15,6 +16,7 @@ allowanceList = AllowanceViewSet.as_view(
         "post": "create",
     }
 )
+
 
 allowanceDetail = AllowanceViewSet.as_view(
     {
@@ -43,10 +45,16 @@ loanDetail = LoanViewSet.as_view(
 )
 
 
+usertDeposit = DepositViewSet.as_view(
+    {
+        "get": "list",
+    }
+)
 urlpatterns = [
     path("allowances/", allowanceList, name="allowances"),
     path("allowances/<int:pk>/", allowanceDetail, name="allowance"),
     path("notifications/", notificationsList, name="notification"),
     path("loans/", loanList, name="loans"),
     path("loans/<int:pk>/", loanDetail, name="loan"),
+    path("deposit/", usertDeposit, name="deposits"),
 ]
