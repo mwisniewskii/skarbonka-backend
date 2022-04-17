@@ -71,15 +71,6 @@ class UserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "balance")
 
-    def get_cleaned_data(self):  # noqa: D102
-        return {
-            "first_name": self.validated_data.get("first_name", ""),
-            "last_name": self.validated_data.get("last_name", ""),
-            "email": self.validated_data.get("email", ""),
-            "user_type": self.validated_data.get("email", ""),
-            "parental_control": self.validated_data.get("email", ""),
-        }
-
     def password_reset(self, request):
         """Send email with password reset."""
         opts = {
