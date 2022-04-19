@@ -53,8 +53,6 @@ INSTALLED_APPS = [
     'corsheaders',
     "accounts",
     "skarbonka",
-
-
 ]
 
 MIDDLEWARE = [
@@ -127,6 +125,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
+BASE_URL = "http://api.mwis.pl"
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Warsaw"
@@ -161,9 +160,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ],
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-    )
+    "DEFAULT_AUTHENTICATION_CLASSES": ('dj_rest_auth.jwt_auth.JWTCookieAuthentication',),
 }
 REST_USE_JWT = True
 JWT_AUTH_COOKIE = 'auth-token'

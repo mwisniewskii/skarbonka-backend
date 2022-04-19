@@ -1,6 +1,6 @@
+DEBUG = False
 
-
-#Don't use Amazon SES on development
+# Don't use Amazon SES on development
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_HOST = 'email-smtp.eu-central-1.amazonaws.com'

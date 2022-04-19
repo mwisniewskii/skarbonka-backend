@@ -42,8 +42,5 @@ urlpatterns = [
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
     path("", include("accounts.urls")),
     path("", include("skarbonka.urls")),
-
-    path("", schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path("swagger", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-
+    path("", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]

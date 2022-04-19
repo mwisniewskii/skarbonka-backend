@@ -49,4 +49,5 @@ Thumbs.db
 *.wmv
 *.env
 
+apps_static/
 settings_local.py

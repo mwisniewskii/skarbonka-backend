@@ -16,7 +16,7 @@ FROM poetry-base as app-base
 WORKDIR /backend
 ADD . /backend
 COPY pyproject.toml ./pyproject.toml
-RUN poetry install --no-dev
+RUN poetry install
 
 FROM app-base as main
 
