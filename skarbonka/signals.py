@@ -62,7 +62,7 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
                 clocked=ClockedSchedule.objects.create(
                     clocked_time=instance.payment_date - timedelta(7)
                 ),
-                args=[],
+                args=[instance.payment_date, recipient.id, instance.id],
                 start_time=timezone.now(),
             )
             instance.save()
@@ -72,7 +72,7 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
             recipient = instance.borrower
 
         elif instance.status == LoanStatus.PAID:
-            msg = _(f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.')
+            msg = f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.'
             recipient = instance.lender
             instance.notify.delete()
 

@@ -1,9 +1,9 @@
 # Standard Library
 from datetime import timedelta
-from django.utils.translation import gettext_lazy as _
 
 # Django
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 # 3rd-party
 from celery import shared_task
@@ -14,6 +14,7 @@ from django_celery_beat.models import PeriodicTask
 from accounts.models import CustomUser
 
 # Local
+from .enum import LoanStatus
 from .enum import NotificationType
 from .enum import TransactionType
 from .models import Loan
@@ -44,21 +45,30 @@ def admit_allowance(sender_id, recipient_id, amount):
 @shared_task(name='loan_payment_date_notification')
 def loan_payment_date_notification(payment_date, borrower_id, loan_id):
     days_to_pay = payment_date - timezone.now()
+
+    notify_days = days_to_pay.days / 2
+    loan = Loan.objects.get(id=loan_id)
+    if notify_days > 0:
+        msg = f'Za {days_to_pay.days} dni upływa termin spłaty pożyczki.'
+        clocked_time = payment_date - timedelta(notify_days)
+    elif notify_days == 0:
+        msg = f'Minął termin spłaty pożyczki.'
+        clocked_time = payment_date
+        loan.status = LoanStatus.EXPIRED
+    else:
+        return
+
+    loan.notify = PeriodicTask.objects.create(
+        name=f'Payment notify {loan_id} {payment_date}',
+        task='loan_payment_date_notification',
+        clocked=ClockedSchedule.objects.create(clocked_time=clocked_time),
+        args=[payment_date, borrower_id, loan_id],
+        start_time=timezone.now(),
+    )
+    loan.save()
     Notification.objects.create(
         recipient_id=borrower_id,
-        content=f'Za {days_to_pay.days} dni upływa termin spłaty pożyczki.',
+        content=msg,
         resource=NotificationType.LOAN,
         target=loan_id,
     )
-    notify_days = days_to_pay.days / 2
-    if notify_days > 0:
-        clocked_time = payment_date - timedelta(notify_days)
-        loan = Loan.objects.get(id=loan_id)
-        loan.notify = PeriodicTask.objects.create(
-            name=f'Payment notfify {loan_id} ',
-            task='loan_payment_date_notification',
-            clocked=ClockedSchedule.objects.create(clocked_time=clocked_time),
-            args=[payment_date, borrower_id, loan_id],
-            start_time=timezone.now(),
-        )
-        loan.save()
