@@ -3,6 +3,7 @@ from datetime import timedelta
 
 # Django
 from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -11,19 +12,25 @@ from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
 # Local
+from .enum import LoanStatus
+from .enum import NotificationType
+from .enum import TransactionType
 from .models import Allowance
 from .models import Loan
-from .models import LoanStatus
 from .models import Notification
-from .models import NotificationType
 from .models import Transaction
-from .models import TransactionType
 
 
 @receiver(post_save, sender=Allowance)
 def create_or_update_periodic_task(sender, instance, created, **kwargs):
     if created:
         instance.setup_task()
+
+
+@receiver(pre_save, sender=Transaction)
+def transaction_faild(sender, instance, **kwargs):
+    if instance.sender is not None:
+        instance.faild = instance.sender.balance < instance.amount
 
 
 @receiver(post_save, sender=Loan)
@@ -50,7 +57,7 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
                 types=TransactionType.LOAN,
             )
             instance.notify = PeriodicTask.objects.create(
-                name=f'Payment notfify {instance.pk} ',
+                name=f'Payment notify {instance.pk} ',
                 task='admit_allowance',
                 clocked=ClockedSchedule.objects.create(
                     clocked_time=instance.payment_date - timedelta(7)
@@ -63,9 +70,11 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
         elif instance.status == LoanStatus.DECLINED:
             msg = f'Pożyczka na kwotę {instance.amount} została odrzucona.'
             recipient = instance.borrower
+
         elif instance.status == LoanStatus.PAID:
-            msg = f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.'
+            msg = _(f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.')
             recipient = instance.lender
+            instance.notify.delete()
 
         Notification.objects.create(
             recipient=recipient,

@@ -53,8 +53,6 @@ INSTALLED_APPS = [
     'corsheaders',
     "accounts",
     "skarbonka",
-
-
 ]
 
 MIDDLEWARE = [

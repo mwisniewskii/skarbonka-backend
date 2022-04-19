@@ -11,40 +11,11 @@ from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
 from model_utils import FieldTracker
 
-
-class TransactionType(models.IntegerChoices):
-    ORDINARY = 1, 'Ordinary'
-    DEPOSIT = 2, 'Deposit'
-    WITHDRAW = 3, 'Withdraw'
-    LOAN = 4, 'Loan'
-    ALLOWANCE = 5, 'Allowance'
-
-
-class FrequencyType(models.IntegerChoices):
-    DAILY = 1, 'Daily'
-    WEEKLY = 2, 'Weekly'
-    MONTHLY = 3, 'Monthly'
-
-
-class NotificationType(models.IntegerChoices):
-    NONE = 1, 'None'
-    TRANSACTION = 2, 'Transaction'
-    ALLOWANCE = 3, 'Allowance'
-    LOAN = 4, 'Loan'
-
-
-class LoanStatus(models.IntegerChoices):
-    PENDING = 1, 'Pending'
-    GRANTED = 2, 'Granted'
-    DECLINED = 3, 'Declined'
-    PAID = 4, 'Paid off'
-
-
-class TransactionType(models.IntegerChoices):
-    ORDINARY = 1, 'Ordinary'
-    DEPOSIT = 2, 'Deposit'
-    WITHDRAW = 3, 'Withdraw'
-    LOAN = 4, 'Loan'
+# Local
+from .enum import FrequencyType
+from .enum import LoanStatus
+from .enum import NotificationType
+from .enum import TransactionType
 
 
 class Transaction(models.Model):
@@ -65,12 +36,6 @@ class Transaction(models.Model):
     )
     failed = models.BooleanField(default=False)
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
-
-    def save(self, *args, **kwargs):
-        super().save(self, *args, **kwargs)
-        if self.sender.balance < self.amount and not self.failed:
-            self.failed = True
-            self.save()
 
 
 class Allowance(models.Model):
@@ -189,7 +154,6 @@ class Loan(models.Model):
     status_tracker = FieldTracker(fields=['status'])
 
     @property
-    def paid(self) -> bool:
+    def paid(self) -> int:
         payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
-        payoff = payoff['amount__sum'] or 0
-        return self.amount <= payoff
+        return payoff['amount__sum'] or 0

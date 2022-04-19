@@ -5,14 +5,6 @@ from rest_framework import permissions
 from accounts.models import UserType
 
 
-
-class AuthenticatedPermissions(permissions.BasePermission):
-    """Family members access."""
-
-    def has_permission(self, request, view):
-        """User accesses."""
-        return request.user.is_authenticated
-
 class FamilyAllowancesPermissions(permissions.BasePermission):
     """Family members access."""
 

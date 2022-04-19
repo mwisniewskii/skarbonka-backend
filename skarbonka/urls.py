@@ -5,8 +5,9 @@ import platform
 from django.urls import path
 
 # Local
-from .views import DepositViewSet
 from .views import AllowanceViewSet
+from .views import DepositViewSet
+from .views import LoanPayoffViewSet
 from .views import LoanViewSet
 from .views import NotificationViewSet
 
@@ -16,8 +17,6 @@ allowanceList = AllowanceViewSet.as_view(
         "post": "create",
     }
 )
-
-
 allowanceDetail = AllowanceViewSet.as_view(
     {
         "get": "retrieve",
@@ -36,18 +35,20 @@ loanList = LoanViewSet.as_view(
         "post": "create",
     }
 )
-
 loanDetail = LoanViewSet.as_view(
     {
         "get": "retrieve",
         "patch": "partial_update",
     }
 )
-
-
-usertDeposit = DepositViewSet.as_view(
+userDeposit = DepositViewSet.as_view(
     {
-        "get": "list",
+        "post": "create",
+    }
+)
+loanPayoff = LoanPayoffViewSet.as_view(
+    {
+        "post": "create",
     }
 )
 urlpatterns = [
@@ -56,5 +57,6 @@ urlpatterns = [
     path("notifications/", notificationsList, name="notification"),
     path("loans/", loanList, name="loans"),
     path("loans/<int:pk>/", loanDetail, name="loan"),
-    path("deposit/", usertDeposit, name="deposits"),
+    path("deposit/", userDeposit, name="deposits"),
+    path("loans/<int:loan_id>/pay-off/", loanPayoff, name="loanpayoff"),
 ]

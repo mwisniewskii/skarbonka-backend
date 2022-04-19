@@ -1,10 +1,9 @@
 # Django
 from django.conf.urls import url
 from django.urls import path
-
-# Local
 from django.views.generic import TemplateView
 
+# Local
 from .views import UserViewSet
 
 userList = UserViewSet.as_view(
@@ -26,7 +25,11 @@ userDetail = UserViewSet.as_view(
 urlpatterns = [
     path("users/", userList, name="users"),
     path("users/<int:pk>/", userDetail, name="user"),
-    url(r'^account-confirm-email/(?P<key>[-:\w]+)/$', TemplateView.as_view(), name='account_confirm_email'),
+    url(
+        r'^account-confirm-email/(?P<key>[-:\w]+)/$',
+        TemplateView.as_view(),
+        name='account_confirm_email',
+    ),
     path(
         "auth/password/reset-confirm/<uidb64>/<token>/",
         TemplateView.as_view(),

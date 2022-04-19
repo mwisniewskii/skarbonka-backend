@@ -1,5 +1,6 @@
 # Standard Library
 from datetime import timedelta
+from django.utils.translation import gettext_lazy as _
 
 # Django
 from django.utils import timezone
@@ -13,11 +14,11 @@ from django_celery_beat.models import PeriodicTask
 from accounts.models import CustomUser
 
 # Local
+from .enum import NotificationType
+from .enum import TransactionType
 from .models import Loan
 from .models import Notification
-from .models import NotificationType
 from .models import Transaction
-from .models import TransactionType
 
 
 @shared_task(name='admit_allowance')
