@@ -23,8 +23,11 @@ services:
       - backend
     ports:
       - "80:80"
+      - "443:443"
+    restart: always
     volumes:
-      - ./apps_static:/apps_static
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
 
   redis:
     image: redis:alpine
@@ -50,6 +53,16 @@ services:
       - db
       - redis
 
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email miczicherry@gmail.com -d api.mwis.pl --agree-tos
+    depends_on:
+      - nginx
 
 volumes:
   db_data:
+  nginx_secrets:
