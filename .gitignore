@@ -50,4 +50,4 @@ Thumbs.db
 *.env
 
 apps_static/
-*_local.py
+project/settings_local.py
