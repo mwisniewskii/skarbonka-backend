@@ -13,7 +13,7 @@ from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
 # Project
-from accounts.models import ControlType
+from accounts.models import ControlType, UserType
 
 # Local
 from .enum import LoanStatus
@@ -34,9 +34,20 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
 
 @receiver(pre_save, sender=Transaction)
 def transaction_status(sender, instance, **kwargs):
+
     if instance.sender is not None:
-        if instance.sender.parentral_control == ControlType.CONFIRMATION:
+        if instance.sender.parental_control == ControlType.CONFIRMATION:
             instance.status = TransactionStatus.PENDING
+        if instance.sender.balance < instance.amount:
+            instance.status = TransactionStatus.FAILED
+
+
+@receiver(post_save, sender=Transaction)
+def transaction_confirmation_notification(sender, instance, created, **kwargs):
+    if instance.sender is not None:
+        control_type = instance.sender.parental_control == ControlType.CONFIRMATION
+        status = instance.status == TransactionStatus.PENDING
+        if control_type and status and created:
             notifications = []
             for parent in instance.sender.family.parents:
                 notifications.append(
@@ -48,9 +59,6 @@ def transaction_status(sender, instance, **kwargs):
                     )
                 )
             Notification.objects.bulk_create(notifications)
-
-        if instance.sender.balance < instance.amount:
-            instance.status = TransactionStatus.FAILED
 
 
 @receiver(post_save, sender=Loan)
@@ -95,7 +103,8 @@ def loans_notifications_transactions(sender, instance, created, **kwargs):
             msg = f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.'
             recipient = instance.lender
             instance.notify.delete()
-
+        else:
+            return
         Notification.objects.create(
             recipient=recipient,
             content=msg,

@@ -1,6 +1,3 @@
-# Standard Library
-import platform
-
 # Django
 from django.urls import path
 
@@ -35,5 +32,5 @@ urlpatterns = [
     path("loans/<int:loan_id>/pay-off/", loanPayoff, name="loanpayoff"),
     path("withdraw/", withdraw, name="withdraw"),
     path("withdraw/<int:pk>/", withdrawDetail, name="withdraws-detail"),
-    path("user/<int:user_id>/withdraws/", withdraws, name="withdraws"),
+    path("users/<int:user_id>/withdraws/", withdraws, name="withdraws"),
 ]

@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Q
 from django.db.models import Sum
+from django.utils import timezone
 
 # Project
 from skarbonka.enum import TransactionStatus
@@ -64,7 +65,7 @@ class CustomUser(AbstractUser):
 
     def income(self, date_from=None):
         if not date_from:
-            date_from = datetime.datetime.now() - datetime.timedelta(days=10 * 365)
+            date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         income = Transaction.objects.filter(
             status=TransactionStatus.ACCEPTED,
             recipient=self,
@@ -74,7 +75,7 @@ class CustomUser(AbstractUser):
 
     def outcome(self, date_from=None):
         if not date_from:
-            date_from = datetime.datetime.now() - datetime.timedelta(days=10 * 365)
+            date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         outcome = Transaction.objects.filter(
             Q(status=TransactionStatus.ACCEPTED) | Q(status=TransactionStatus.PENDING),
             sender=self,

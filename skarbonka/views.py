@@ -1,5 +1,6 @@
 # Django
 from django.db.models import Q
+from django.http import QueryDict
 from django.utils.decorators import method_decorator
 
 # 3rd-party
@@ -10,7 +11,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 # Project
-from accounts.models import CustomUser
+from accounts.models import CustomUser, ControlType
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
@@ -141,8 +142,9 @@ class WithdrawViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            recipient=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW
+            sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW
         )
+        print(serializer)
 
     def create(self, request, *args, **kwargs):
         user = CustomUser.objects.get(id=request.user.id)
@@ -152,7 +154,14 @@ class WithdrawViewSet(viewsets.ModelViewSet):
             )
 
         limit_check, resp = period_limit_check(user)
-        if not limit_check:
+        if limit_check:
             return resp
 
-        return super().create(request, *args, **kwargs)
+        if user.parental_control == ControlType.CONFIRMATION:
+            resp = Response({"message": "Transaction must be accepted by parent."}, status.HTTP_201_CREATED)
+            super().create(request, *args, **kwargs)
+            return resp
+
+        resp = super().create(request, *args, **kwargs)
+
+        return resp
