@@ -11,7 +11,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 # Project
-from accounts.models import CustomUser, ControlType
+from accounts.models import ControlType
+from accounts.models import CustomUser
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
@@ -20,10 +21,13 @@ from .enum import TransactionType
 from .models import Allowance
 from .models import Loan
 from .models import Notification
+from .models import Transaction
 from .permissions import AuthenticatedPermissions
 from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
 from .permissions import LoanObjectPermissions
+from .permissions import OwnObjectOrParentOfFamilyPermissions
+from .permissions import ParentPatchPermissions
 from .serializers import AllowanceSerializer
 from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
@@ -129,7 +133,11 @@ class LoanPayoffViewSet(viewsets.ModelViewSet):
 
 class WithdrawViewSet(viewsets.ModelViewSet):
 
-    permission_classes = (AuthenticatedPermissions,)
+    permission_classes = (
+        AuthenticatedPermissions,
+        ParentPatchPermissions,
+        OwnObjectOrParentOfFamilyPermissions,
+    )
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -137,13 +145,12 @@ class WithdrawViewSet(viewsets.ModelViewSet):
         return WithdrawSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset.filter(sender=self.kwargs['user_id'], type=TransactionType.WITHDRAW)
+        return Transaction.objects.filter(
+            sender=self.kwargs['user_id'], types=TransactionType.WITHDRAW
+        )
 
     def perform_create(self, serializer):
-        serializer.save(
-            sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW
-        )
+        serializer.save(sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW)
         print(serializer)
 
     def create(self, request, *args, **kwargs):
@@ -158,7 +165,9 @@ class WithdrawViewSet(viewsets.ModelViewSet):
             return resp
 
         if user.parental_control == ControlType.CONFIRMATION:
-            resp = Response({"message": "Transaction must be accepted by parent."}, status.HTTP_201_CREATED)
+            resp = Response(
+                {"message": "Transaction must be accepted by parent."}, status.HTTP_201_CREATED
+            )
             super().create(request, *args, **kwargs)
             return resp
 

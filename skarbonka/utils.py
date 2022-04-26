@@ -20,5 +20,3 @@ def period_limit_check(user):
                 {"message": "Exceeded the allowable limit!"}, status.HTTP_400_BAD_REQUEST
             )
     return False, None
-
-

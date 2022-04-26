@@ -13,7 +13,8 @@ from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
 # Project
-from accounts.models import ControlType, UserType
+from accounts.models import ControlType
+from accounts.models import UserType
 
 # Local
 from .enum import LoanStatus
