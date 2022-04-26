@@ -15,6 +15,7 @@ from model_utils import FieldTracker
 from .enum import FrequencyType
 from .enum import LoanStatus
 from .enum import NotificationType
+from .enum import TransactionStatus
 from .enum import TransactionType
 
 
@@ -34,8 +35,10 @@ class Transaction(models.Model):
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
-    failed = models.BooleanField(default=False)
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
+    status = models.PositiveSmallIntegerField(
+        choices=TransactionStatus.choices, default=TransactionStatus.ACCEPTED
+    )
 
 
 class Allowance(models.Model):

@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 from datetime import timedelta
 
 # Django
@@ -11,9 +12,13 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
+# Project
+from accounts.models import ControlType
+
 # Local
 from .enum import LoanStatus
 from .enum import NotificationType
+from .enum import TransactionStatus
 from .enum import TransactionType
 from .models import Allowance
 from .models import Loan
@@ -28,13 +33,28 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
 
 
 @receiver(pre_save, sender=Transaction)
-def transaction_faild(sender, instance, **kwargs):
+def transaction_status(sender, instance, **kwargs):
     if instance.sender is not None:
-        instance.faild = instance.sender.balance < instance.amount
+        if instance.sender.parentral_control == ControlType.CONFIRMATION:
+            instance.status = TransactionStatus.PENDING
+            notifications = []
+            for parent in instance.sender.family.parents:
+                notifications.append(
+                    Notification(
+                        recipient=parent,
+                        content=f"{instance.sender} chcę dokonać transakcji na kwotę {instance.amount}",
+                        resource=NotificationType.WITHDRAW,
+                        target=instance.id,
+                    )
+                )
+            Notification.objects.bulk_create(notifications)
+
+        if instance.sender.balance < instance.amount:
+            instance.status = TransactionStatus.FAILED
 
 
 @receiver(post_save, sender=Loan)
-def loans_notifications_transactions(sender, update_fields, instance, created, **kwargs):
+def loans_notifications_transactions(sender, instance, created, **kwargs):
     """Signals for handle loan status."""
     if created:
         msg = f'{instance.borrower} prosi cię o pożyczkę na {instance.amount}.'

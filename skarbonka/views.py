@@ -10,6 +10,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 # Project
+from accounts.models import CustomUser
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
@@ -23,12 +24,15 @@ from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
 from .permissions import LoanObjectPermissions
 from .serializers import AllowanceSerializer
+from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
+from .serializers import WithdrawSerializer
 from .swagger_schemas import loan_schema
+from .utils import period_limit_check
 
 
 class AllowanceViewSet(viewsets.ModelViewSet):
@@ -56,6 +60,7 @@ class AllowanceViewSet(viewsets.ModelViewSet):
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
+    """List of notifications to request user ordered by date."""
 
     serializer_class = NotificationSerializer
     permission_classes = ()
@@ -119,3 +124,35 @@ class LoanPayoffViewSet(viewsets.ModelViewSet):
             types=TransactionType.LOAN,
             loan=loan,
         )
+
+
+class WithdrawViewSet(viewsets.ModelViewSet):
+
+    permission_classes = (AuthenticatedPermissions,)
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateWithdrawSerializer
+        return WithdrawSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(sender=self.kwargs['user_id'], type=TransactionType.WITHDRAW)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            recipient=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW
+        )
+
+    def create(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=request.user.id)
+        if user.balance < float(request.data['amount']):
+            return Response(
+                {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
+            )
+
+        limit_check, resp = period_limit_check(user)
+        if not limit_check:
+            return resp
+
+        return super().create(request, *args, **kwargs)
