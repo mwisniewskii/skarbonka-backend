@@ -89,3 +89,27 @@ class LoanParentSerializer(serializers.ModelSerializer):
 class LoanSampleSerializer(serializers.Serializer):
     child = LoanChildSerializer(many=True)
     parent = LoanParentSerializer(many=True)
+
+
+class CreateWithdrawSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+
+        fields = ('amount',)
+
+
+class WithdrawSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'amount',
+            'sender',
+            'datetime',
+            'status',
+        )
+        read_only_fields = (
+            'amount',
+            'sender',
+            'datetime',
+        )

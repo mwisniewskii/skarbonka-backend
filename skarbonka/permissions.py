@@ -52,3 +52,11 @@ class ParentPatchPermissions(permissions.BasePermission):
         if request.method == "PATCH":
             return request.user.user_type == UserType.PARENT
         return True
+
+
+class OwnObjectOrParentOfFamilyPermissions(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        parent = (
+            request.user.family == obj.sender.family and request.user.user_type == UserType.PARENT
+        )
+        return obj.sender == request.user or parent

@@ -10,6 +10,13 @@ class TransactionType(models.IntegerChoices):
     ALLOWANCE = 5, 'Allowance'
 
 
+class TransactionStatus(models.IntegerChoices):
+    ACCEPTED = 1, 'Accepted'
+    PENDING = 2, 'Pending'
+    FAILED = 3, 'Failed'
+    DECLINED = 4, 'Declined'
+
+
 class FrequencyType(models.IntegerChoices):
     DAILY = 1, 'Daily'
     WEEKLY = 2, 'Weekly'
@@ -21,6 +28,7 @@ class NotificationType(models.IntegerChoices):
     TRANSACTION = 2, 'Transaction'
     ALLOWANCE = 3, 'Allowance'
     LOAN = 4, 'Loan'
+    WITHDRAW = 5, 'Withdraw'
 
 
 class LoanStatus(models.IntegerChoices):

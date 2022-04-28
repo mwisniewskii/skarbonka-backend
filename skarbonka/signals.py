@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 from datetime import timedelta
 
 # Django
@@ -11,9 +12,14 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
+# Project
+from accounts.models import ControlType
+from accounts.models import UserType
+
 # Local
 from .enum import LoanStatus
 from .enum import NotificationType
+from .enum import TransactionStatus
 from .enum import TransactionType
 from .models import Allowance
 from .models import Loan
@@ -28,13 +34,36 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
 
 
 @receiver(pre_save, sender=Transaction)
-def transaction_faild(sender, instance, **kwargs):
+def transaction_status(sender, instance, **kwargs):
+
     if instance.sender is not None:
-        instance.faild = instance.sender.balance < instance.amount
+        if instance.sender.parental_control == ControlType.CONFIRMATION:
+            instance.status = TransactionStatus.PENDING
+        if instance.sender.balance < instance.amount:
+            instance.status = TransactionStatus.FAILED
+
+
+@receiver(post_save, sender=Transaction)
+def transaction_confirmation_notification(sender, instance, created, **kwargs):
+    if instance.sender is not None:
+        control_type = instance.sender.parental_control == ControlType.CONFIRMATION
+        status = instance.status == TransactionStatus.PENDING
+        if control_type and status and created:
+            notifications = []
+            for parent in instance.sender.family.parents:
+                notifications.append(
+                    Notification(
+                        recipient=parent,
+                        content=f"{instance.sender} chcę dokonać transakcji na kwotę {instance.amount}",
+                        resource=NotificationType.WITHDRAW,
+                        target=instance.id,
+                    )
+                )
+            Notification.objects.bulk_create(notifications)
 
 
 @receiver(post_save, sender=Loan)
-def loans_notifications_transactions(sender, update_fields, instance, created, **kwargs):
+def loans_notifications_transactions(sender, instance, created, **kwargs):
     """Signals for handle loan status."""
     if created:
         msg = f'{instance.borrower} prosi cię o pożyczkę na {instance.amount}.'
@@ -75,7 +104,8 @@ def loans_notifications_transactions(sender, update_fields, instance, created, *
             msg = f'{instance.borrower} spłacił pożyczkę z terminem spłaty do {instance.payment_date}.'
             recipient = instance.lender
             instance.notify.delete()
-
+        else:
+            return
         Notification.objects.create(
             recipient=recipient,
             content=msg,
