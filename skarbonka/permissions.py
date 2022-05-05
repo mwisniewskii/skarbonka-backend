@@ -12,3 +12,15 @@ class FamilyAllowancesPermissions(permissions.BasePermission):
             or request.user.is_superuser
             or obj.child == request.user.family
         )
+
+
+class FamilyTransacionPermissions(permissions.BasePermission):
+    """Family members access."""
+
+    def has_object_permission(self, request, view, obj):
+        """Only family member access."""
+        return (
+            obj.sender == request.user.family
+            or request.user.is_superuser
+            or obj.recipient == request.user.family
+        )

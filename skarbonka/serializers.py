@@ -4,6 +4,7 @@ from rest_framework import serializers
 # Local
 from .models import Allowance
 from .models import Notification
+from .models import Transaction
 
 
 class AllowanceSerializer(serializers.ModelSerializer):
@@ -35,4 +36,18 @@ class NotificationSerializer(serializers.ModelSerializer):
             'created_at',
             'resource',
             'target',
+        )
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer"""
+
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'title',
+            'description',
+            'amount',
         )
