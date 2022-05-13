@@ -37,3 +37,10 @@ class LoanStatus(models.IntegerChoices):
     DECLINED = 3, 'Declined'
     PAID = 4, 'Paid off'
     EXPIRED = 5, 'Expired'
+
+
+class TransactionState(models.IntegerChoices):
+    ACCEPTED = 1, 'Accepted'
+    PENDING = 2, 'Pending'
+    FAILED = 3, 'Failed'
+    DECLINED = 4, 'Declined'

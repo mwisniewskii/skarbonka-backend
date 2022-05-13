@@ -11,6 +11,7 @@ from django.utils import timezone
 # 3rd-party
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
+from django_fsm.signals import post_transition
 
 # Project
 from accounts.models import ControlType

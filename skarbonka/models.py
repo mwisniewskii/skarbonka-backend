@@ -1,4 +1,6 @@
 # Django
+import datetime
+
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -10,9 +12,11 @@ from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
 from model_utils import FieldTracker
+from django_fsm import FSMField, transition
 
 # Local
-from .enum import FrequencyType
+from accounts.models import ControlType
+from .enum import FrequencyType, TransactionState
 from .enum import LoanStatus
 from .enum import NotificationType
 from .enum import TransactionStatus
@@ -39,6 +43,38 @@ class Transaction(models.Model):
     status = models.PositiveSmallIntegerField(
         choices=TransactionStatus.choices, default=TransactionStatus.ACCEPTED
     )
+    state = FSMField(choices=TransactionState.choices, default=TransactionStatus.PENDING)
+
+    def is_ordinary_transaction(self):
+        return self.types == TransactionType.ORDINARY
+
+    def sender_funds_enough(self):
+        if self.sender:
+            return self.amount <= self.sender.balance
+        return True
+
+    def period_limit_check(self):
+        if self.sender.parental_control == ControlType.PERIODIC:
+            period = datetime.datetime.now() - datetime.timedelta(days=self.sender.days_limit_period)
+            return self.sender.outcome(period) >= self.sender.sum_periodic_limit
+
+    @transition(field=state, source=TransactionStatus.PENDING, target=TransactionStatus.ACCEPTED,
+                conditions=[sender_funds_enough])
+    def accept(self):
+        pass
+
+    @transition(field=state, source=TransactionStatus.PENDING, target=TransactionStatus.FAILED)
+    def fail(self):
+        pass
+
+    @transition(field=state, source=TransactionStatus.PENDING, target=TransactionStatus.DECLINED)
+    def decline(self):
+        pass
+
+    @transition(field=state, source=TransactionStatus.FAILED, target=TransactionStatus.FAILED,
+                conditions=[is_ordinary_transaction])
+    def retry(self):
+        pass
 
 
 class Allowance(models.Model):
@@ -81,6 +117,7 @@ class Allowance(models.Model):
         return super().delete(*args, **kwargs)
 
     def setup_task(self):
+        """Setup new task for celery beat."""
         self.task = PeriodicTask.objects.create(
             name=f'Allowance {self.pk} ',
             task='admit_allowance',
@@ -92,6 +129,7 @@ class Allowance(models.Model):
 
     @property
     def interval(self):
+        """Get crontab schedule object."""
         if self.frequency == FrequencyType.DAILY:
             crontab, _ = CrontabSchedule.objects.get_or_create(
                 hour=self.execute_time.hour, minute=self.execute_time.minute, day_of_week='*'
@@ -112,7 +150,7 @@ class Allowance(models.Model):
 
 
 class Notification(models.Model):
-
+    """Model of notifications."""
     recipient = models.ForeignKey(
         'accounts.CustomUser',
         null=True,
@@ -127,6 +165,7 @@ class Notification(models.Model):
 
 
 class Loan(models.Model):
+    """Model of Loans"""
     created_at = models.DateTimeField(auto_now=True)
     reason = models.CharField(max_length=255)
     lender = models.ForeignKey(
@@ -158,5 +197,6 @@ class Loan(models.Model):
 
     @property
     def paid(self) -> int:
+        """Repaid loan amount."""
         payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
         return payoff['amount__sum'] or 0

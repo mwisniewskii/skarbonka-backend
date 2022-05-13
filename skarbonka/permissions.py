@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 # Project
 from accounts.models import UserType
+from skarbonka.enum import TransactionType
 
 
 class FamilyAllowancesPermissions(permissions.BasePermission):
@@ -18,6 +19,7 @@ class FamilyAllowancesPermissions(permissions.BasePermission):
 
 
 class LoanObjectPermissions(permissions.BasePermission):
+    """Permission to object of Loan."""
     def has_object_permission(self, request, view, obj):
         return (
             obj.lender == request.user or obj.borrower == request.user or request.user.is_superuser
@@ -25,19 +27,20 @@ class LoanObjectPermissions(permissions.BasePermission):
 
 
 class LoanObjectBorrowerPermissions(permissions.BasePermission):
+    """Checking whether the user is a borrower."""
     def has_object_permission(self, request, view, obj):
         return obj.borrower == request.user or request.user.is_superuser
 
 
 class AuthenticatedPermissions(permissions.BasePermission):
-    """User authenticated."""
+    """Checking if the user is authorized."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated
 
 
 class ChildCreatePermissions(permissions.BasePermission):
-    """Child create permissions."""
+    """Child Post method permissions."""
 
     def has_permission(self, request, view):
         if request.method == "POST":
@@ -55,8 +58,12 @@ class ParentPatchPermissions(permissions.BasePermission):
 
 
 class OwnObjectOrParentOfFamilyPermissions(permissions.BasePermission):
+    """Permission for object owner or parent of owner."""
     def has_object_permission(self, request, view, obj):
         parent = (
             request.user.family == obj.sender.family and request.user.user_type == UserType.PARENT
         )
         return obj.sender == request.user or parent
+
+
+

@@ -36,7 +36,7 @@ from .serializers import LoanParentSerializer
 from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
 from .serializers import WithdrawSerializer
-from .swagger_schemas import loan_schema
+from .swagger_schemas import loan_schema, withdraw_post_schema
 from .utils import period_limit_check
 
 
@@ -153,6 +153,7 @@ class WithdrawViewSet(viewsets.ModelViewSet):
         serializer.save(sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW)
         print(serializer)
 
+    @withdraw_post_schema
     def create(self, request, *args, **kwargs):
         user = CustomUser.objects.get(id=request.user.id)
         if user.balance < float(request.data['amount']):
@@ -164,13 +165,10 @@ class WithdrawViewSet(viewsets.ModelViewSet):
         if limit_check:
             return resp
 
+        resp = super().create(request, *args, **kwargs)
         if user.parental_control == ControlType.CONFIRMATION:
             resp = Response(
-                {"message": "Transaction must be accepted by parent."}, status.HTTP_201_CREATED
+                {"message": "Transaction must be accepted by parent."}, status.HTTP_202_ACCEPTED
             )
-            super().create(request, *args, **kwargs)
-            return resp
-
-        resp = super().create(request, *args, **kwargs)
 
         return resp
