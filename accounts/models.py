@@ -9,7 +9,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 # Project
-from skarbonka.enum import TransactionStatus
+from skarbonka.enum import TransactionState
 from skarbonka.models import Transaction
 
 # Local
@@ -19,8 +19,6 @@ from .managers import CustomUserManager
 
 class Family(models.Model):
     """Aggregation of family members."""
-
-    name = models.CharField(max_length=255)
 
     @property
     def parents(self):
@@ -57,7 +55,7 @@ class CustomUser(AbstractUser):
         if not date_from:
             date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         income = Transaction.objects.filter(
-            status=TransactionStatus.ACCEPTED,
+            state=TransactionState.ACCEPTED,
             recipient=self,
             datetime__gt=date_from,
         ).aggregate(Sum('amount'))
@@ -67,7 +65,7 @@ class CustomUser(AbstractUser):
         if not date_from:
             date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         outcome = Transaction.objects.filter(
-            Q(status=TransactionStatus.ACCEPTED) | Q(status=TransactionStatus.PENDING),
+            Q(state=TransactionState.ACCEPTED) | Q(state=TransactionState.PENDING),
             sender=self,
             datetime__gt=date_from,
         ).aggregate(Sum('amount'))

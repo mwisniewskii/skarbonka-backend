@@ -35,8 +35,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = (
             'content',
             'created_at',
-            'resource',
-            'target',
+            'url',
         )
 
 
@@ -94,7 +93,6 @@ class LoanSampleSerializer(serializers.Serializer):
 class CreateWithdrawSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-
         fields = ('amount',)
 
 
@@ -106,7 +104,7 @@ class WithdrawSerializer(serializers.ModelSerializer):
             'amount',
             'sender',
             'datetime',
-            'status',
+            'state',
         )
         read_only_fields = (
             'amount',
