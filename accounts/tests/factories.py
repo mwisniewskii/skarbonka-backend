@@ -3,9 +3,6 @@ import factory
 
 
 class FamilyFactory(factory.django.DjangoModelFactory):
-
-    name = factory.Faker("name")
-
     class Meta:
         model = 'accounts.Family'
 

@@ -14,8 +14,6 @@ from django_celery_beat.models import PeriodicTask
 from accounts.models import CustomUser
 
 # Local
-from .enum import LoanStatus
-from .enum import NotificationType
 from .enum import TransactionType
 from .models import Loan
 from .models import Notification
@@ -37,8 +35,6 @@ def admit_allowance(sender_id, recipient_id, amount):
         Notification.objects.create(
             recipient=sender,
             content=f'Nie udało się przelać kieszonkowego dla {recipient}',
-            resource=NotificationType.TRANSACTION,
-            target=transaction.id,
         )
 
 
@@ -68,6 +64,4 @@ def loan_payment_date_notification(payment_date, borrower_id, loan_id):
     Notification.objects.create(
         recipient_id=borrower_id,
         content=msg,
-        resource=NotificationType.LOAN,
-        target=loan_id,
     )
