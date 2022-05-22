@@ -13,7 +13,8 @@ from skarbonka.enum import TransactionState
 from skarbonka.models import Transaction
 
 # Local
-from .enum import UserType, ControlType
+from .enum import ControlType
+from .enum import UserType
 from .managers import CustomUserManager
 
 

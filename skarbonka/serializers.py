@@ -39,6 +39,47 @@ class NotificationSerializer(serializers.ModelSerializer):
         )
 
 
+class TransactionSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer"""
+
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'title',
+            'description',
+            'amount',
+        )
+
+
+class TransactionDetailSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer."""
+
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'sender',
+            'datetime',
+            'title',
+            'description',
+            'amount',
+            'types',
+            'state',
+        )
+        read_only_fields = (
+            'recipient',
+            'sender',
+            'datetime',
+            'title',
+            'description',
+            'amount',
+            'types',
+        )
+
+
 class DepositSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
@@ -60,12 +101,12 @@ class LoanChildSerializer(serializers.ModelSerializer):
             'reason',
             'lender',
             'amount',
-            'status',
+            'state',
             'payment_date',
             'created_at',
             'paid',
         )
-        read_only_fields = ('id', 'created_at', 'payment_date', 'status', 'paid')
+        read_only_fields = ('id', 'created_at', 'payment_date', 'state', 'paid')
 
 
 class LoanParentSerializer(serializers.ModelSerializer):
@@ -77,7 +118,7 @@ class LoanParentSerializer(serializers.ModelSerializer):
             'reason',
             'borrower',
             'amount',
-            'status',
+            'state',
             'payment_date',
             'created_at',
             'paid',

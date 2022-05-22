@@ -7,38 +7,41 @@ from django_fsm import can_proceed
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, UpdateAPIView
 from rest_framework.response import Response
 
 # Project
+from accounts.models import CustomUser
 from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
 # Local
-from .enum import TransactionType, LoanState
+from .enum import LoanState, TransactionState
 from .models import Allowance
 from .models import Loan
 from .models import Notification
 from .models import Transaction
+from .models import TransactionType
 from .permissions import AuthenticatedPermissions
 from .permissions import ChildCreatePermissions
 from .permissions import FamilyAllowancesPermissions
+from .permissions import FamilyTransacionPermissions
 from .permissions import LoanObjectPermissions
 from .permissions import OwnObjectOrParentOfFamilyPermissions
 from .permissions import ParentPatchPermissions
-from .serializers import AllowanceSerializer
+from .serializers import AllowanceSerializer, TransactionDetailSerializer
 from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
+from .serializers import TransactionSerializer
 from .serializers import WithdrawSerializer
 from .swagger_schemas import loan_schema
 
 
 class TransactionCreateMixin:
-
     def create(self, request, *args, **kwargs):
         """Method require implemented method perform_create which returns transaction object."""
         serializer = self.get_serializer(data=request.data)
@@ -98,6 +101,72 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
 
+class TransactionViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+
+    serializer_class = TransactionSerializer
+    permission_classes = (FamilyTransacionPermissions,)
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Transaction.objects.filter(Q(sender=user))
+        return queryset
+
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(
+            sender=self.request.user,
+            types=TransactionType.ORDINARY,
+        )
+
+    def create(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=request.user.id)
+        recipient = CustomUser.objects.get(id=request.data['recipient'])
+        if not user.family == recipient.family:
+            return Response({"message": "not a family member"}, status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+
+class TransactionUpdateView(viewsets.ModelViewSet):
+    serializer_class = TransactionDetailSerializer
+    permission_classes = (ParentPatchPermissions,)
+
+    def dispatch(self, request, *args, **kwargs):
+        resp = super().dispatch(request, *args, **kwargs)
+        obj = self.get_object()
+        if self.request.user.family != obj.sender.family or self.request.user.family != obj.recipient.family:
+            return Response({"message": "It's not your family resources!"}, status.HTTP_403_FORBIDDEN)
+        return resp
+
+    def perform_update(self, serializer):
+        return serializer.save()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        transaction = self.perform_update(serializer)
+
+        if kwargs['state'] == TransactionState.ACCEPTED:
+            if not can_proceed(transaction.accept()):
+                return Response(
+                    {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
+                )
+            transaction.grant()
+        if kwargs['state'] == TransactionState.DECLINED:
+            if not can_proceed(transaction.decline()):
+                return Response(
+                    {"message": "Only pending loans can be rejected."}, status.HTTP_400_BAD_REQUEST
+                )
+            transaction.decline()
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+
 class DepositViewSet(viewsets.ModelViewSet):
 
     serializer_class = DepositSerializer
@@ -141,8 +210,10 @@ class LoanViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         kwargs['state'] = request.data.pop('state')
         if kwargs['state'] not in [LoanState.GRANTED, LoanState.DECLINED]:
-            return Response({"message": "Invalid options, state must by Granted or Declined"},
-                            status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Invalid options, the state can only be set to Granted or Declined"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         return super().partial_update(request, *args, **kwargs)
 
@@ -154,11 +225,15 @@ class LoanViewSet(viewsets.ModelViewSet):
         loan = self.perform_update(serializer)
         if kwargs['state'] == LoanState.GRANTED:
             if not can_proceed(loan.grant()):
-                return Response({"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
+                )
             loan.grant()
         if kwargs['state'] == LoanState.DECLINED:
             if not can_proceed(loan.decline()):
-                return Response({"message": "Only pending loans can be rejected."}, status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Only pending loans can be rejected."}, status.HTTP_400_BAD_REQUEST
+                )
             loan.decline()
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -205,4 +280,6 @@ class WithdrawViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
         )
 
     def perform_create(self, serializer):
-        return serializer.save(sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW)
+        return serializer.save(
+            sender=self.request.user, title='Withdraw', types=TransactionType.WITHDRAW
+        )
