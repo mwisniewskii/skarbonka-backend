@@ -1,11 +1,29 @@
 # Django
+from difflib import restore
+from typing_extensions import Self
 from django.db.models import Q
+from requests import request
+import accounts
 from django.http import QueryDict
 from django.utils.decorators import method_decorator
 
 # 3rd-party
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
+
+# Project
+from accounts.models import CustomUser, UserType
+from accounts.permissions import ParentCUDPermissions
+
+# Local
+from .models import Allowance, TransactionType
+from .models import Notification
+from .models import Transaction
+from .permissions import FamilyAllowancesPermissions
+from .permissions import FamilyTransacionPermissions
+from .serializers import AllowanceSerializer, TransactionSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -76,6 +94,31 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
 
+class TransactionViewSet(viewsets.ModelViewSet):
+
+    serializer_class = TransactionSerializer
+    permission_classes = (FamilyTransacionPermissions,)
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Transaction.objects.filter(Q(sender=user))
+        return queryset
+
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(
+            sender=self.request.user,
+            types=TransactionType.ORDINARY,
+        )
+
+    def create(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=request.user.id)
+        recipient = CustomUser.objects.get(id=request.data['recipient'])
+        if user.family == recipient.family:
+            resp = super().create(request, *args, **kwargs)
+            return resp
+        resp = Response({"message": "not a family member"}, status.HTTP_400_BAD_REQUEST)
+        
+        
 class DepositViewSet(viewsets.ModelViewSet):
 
     serializer_class = DepositSerializer

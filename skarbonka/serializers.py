@@ -40,6 +40,19 @@ class NotificationSerializer(serializers.ModelSerializer):
         )
 
 
+class TransactionSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer"""
+    
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'title',
+            'description',
+            'amount',
+        )
+
 class DepositSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
