@@ -2,31 +2,21 @@
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 
 # 3rd-party
+from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
+from model_utils import FieldTracker
 
-
-class TransactionType(models.IntegerChoices):
-    ORDINARY = 1, 'Ordinary'
-    DEPOSIT = 2, 'Deposit'
-    WITHDRAW = 3, 'Withdraw'
-    LOAN = 4, 'Loan'
-    ALLOWANCE = 5, 'Allowance'
-
-
-class FrequencyType(models.IntegerChoices):
-    DAILY = 1, 'Daily'
-    WEEKLY = 2, 'Weekly'
-    MONTHLY = 3, 'Monthly'
-
-
-class NotificationType(models.IntegerChoices):
-    NONE = 1, 'None'
-    TRANSACTION = 2, 'Transaction'
-    ALLOWANCE = 3, 'Allowance'
+# Local
+from .enum import FrequencyType
+from .enum import LoanStatus
+from .enum import NotificationType
+from .enum import TransactionStatus
+from .enum import TransactionType
 
 
 class Transaction(models.Model):
@@ -45,7 +35,10 @@ class Transaction(models.Model):
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
-    failed = models.BooleanField(default=False)
+    loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
+    status = models.PositiveSmallIntegerField(
+        choices=TransactionStatus.choices, default=TransactionStatus.ACCEPTED
+    )
 
 
 class Allowance(models.Model):
@@ -131,3 +124,39 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     resource = models.PositiveSmallIntegerField(choices=NotificationType.choices, default=1)
     target = models.PositiveIntegerField(null=True, blank=True)
+
+
+class Loan(models.Model):
+    created_at = models.DateTimeField(auto_now=True)
+    reason = models.CharField(max_length=255)
+    lender = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='lender',
+    )
+    borrower = models.ForeignKey(
+        'accounts.CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='borrower',
+    )
+    status = models.PositiveSmallIntegerField(
+        choices=LoanStatus.choices, default=LoanStatus.PENDING
+    )
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    payment_date = models.DateTimeField(null=True, blank=True)
+    notify = models.OneToOneField(
+        ClockedSchedule,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    status_tracker = FieldTracker(fields=['status'])
+
+    @property
+    def paid(self) -> int:
+        payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
+        return payoff['amount__sum'] or 0

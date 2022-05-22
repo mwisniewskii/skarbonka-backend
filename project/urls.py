@@ -14,11 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 # Django
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import include
 from django.urls import path
-from django.urls import re_path
 
 # 3rd-party
 from drf_yasg import openapi
@@ -40,13 +40,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("dj_rest_auth.urls")),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
-    path(
-        "auth/password/reset-confirm/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(),
-        name="password_reset_confirm",
-    ),
     path("", include("accounts.urls")),
     path("", include("skarbonka.urls")),
-    path("", schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path("swagger", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-]
+    path("", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
