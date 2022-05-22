@@ -47,17 +47,15 @@ class TransactionCreateMixin:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
-
+        if not can_proceed(obj.accept):
+            return Response(
+                {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
+            )
         if can_proceed(obj.to_confirm):
             obj.to_confirm()
             obj.save()
             return Response(
                 {"message": "Transaction must be accepted by parent."}, status.HTTP_202_ACCEPTED
-            )
-
-        if not can_proceed(obj.accept):
-            return Response(
-                {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
             )
         obj.accept()
         obj.save()
@@ -244,7 +242,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class LoanPayoffViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+class LoanPayoffViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     serializer_class = LoanPayoffSerializer
     permission_classes = (AuthenticatedPermissions,)
@@ -261,7 +259,7 @@ class LoanPayoffViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
         )
 
 
-class WithdrawViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+class WithdrawViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     permission_classes = (
         AuthenticatedPermissions,

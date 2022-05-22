@@ -129,11 +129,10 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 BASE_URL = "http://api.mwis.pl"
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "Europe/Warsaw"
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
