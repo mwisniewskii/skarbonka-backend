@@ -244,6 +244,6 @@ class Loan(models.Model):
     def expire(self):
         Notification.objects.create(
             recipient=self.borrower,
-            content=f'Upłyną',
+            content=f'Termin spłaty pożyczki {self.payment_date} upłyną.',
         )
         self.notify.delete()

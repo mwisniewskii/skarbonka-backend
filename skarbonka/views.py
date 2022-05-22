@@ -52,13 +52,12 @@ class TransactionCreateMixin:
                 {"message": "Transaction must be accepted by parent."}, status.HTTP_202_ACCEPTED
             )
 
-        if can_proceed(obj.accept):
-            obj.accept()
-            obj.save()
+        if not can_proceed(obj.accept):
             return Response(
                 {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
             )
-
+        obj.accept()
+        obj.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

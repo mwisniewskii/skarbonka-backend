@@ -31,14 +31,24 @@ class NotificationTest(APITestCase):
 class DepositTest(APITestCase):
 
     def setUp(self):
-        pass
+        self.child = UserFactory(family=self.parent.family)
+        self.client = APIClient()
+        self.client.force_authenticate(self.child)
+        self.url = reverse('deposit')
 
     def test_deposit(self):
-        pass
+        response = self.client.post(self.url, {'amount': 10.0})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post(self.url, {'amount': -10.0})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class LoanTest(APITestCase):
-    pass
+    def setUp(self):
+        pass
+
+    def test_loan(self):
+        pass
 
 
 class WithdrawCreateTest(APITestCase):
