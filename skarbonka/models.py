@@ -1,7 +1,8 @@
-# Django
+# Standard Library
 import datetime
 from decimal import Decimal
 
+# Django
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -12,13 +13,19 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
-from django_fsm import FSMField, transition, can_proceed
+from django_fsm import FSMField
+from django_fsm import can_proceed
+from django_fsm import transition
 
 # Local
-
-from .enum import FrequencyType, TransactionState, LoanState
+from .enum import FrequencyType
+from .enum import LoanState
+from .enum import TransactionState
 from .enum import TransactionType
-from .state_conditions import sender_funds_enough, period_limit_check, confirmation_control, loan_funds_enough
+from .state_conditions import confirmation_control
+from .state_conditions import loan_funds_enough
+from .state_conditions import period_limit_check
+from .state_conditions import sender_funds_enough
 
 
 class Transaction(models.Model):
@@ -33,20 +40,31 @@ class Transaction(models.Model):
     datetime = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
+    )
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
     state = FSMField(choices=TransactionState.choices, default=TransactionState.PENDING)
 
-    @transition(field=state, source=TransactionState.PENDING, target=TransactionState.ACCEPTED,
-                conditions=[sender_funds_enough, period_limit_check], on_error=TransactionState.FAILED)
+    @transition(
+        field=state,
+        source=TransactionState.PENDING,
+        target=TransactionState.ACCEPTED,
+        conditions=[sender_funds_enough, period_limit_check],
+        on_error=TransactionState.FAILED,
+    )
     def accept(self):
         pass
 
-    @transition(field=state, source=TransactionState.PENDING, target=TransactionState.TO_CONFIRM,
-                conditions=[confirmation_control])
+    @transition(
+        field=state,
+        source=TransactionState.PENDING,
+        target=TransactionState.TO_CONFIRM,
+        conditions=[confirmation_control],
+    )
     def to_confirm(self):
         notifications = []
         for parent in self.sender.family.parents:
@@ -65,8 +83,13 @@ class Transaction(models.Model):
             content=f"Transakcja na kwotę {self.amount} została odrzucona przez {parent}.",
         )
 
-    @transition(field=state, source=TransactionState.TO_CONFIRM, target=TransactionState.ACCEPTED,
-                conditions=[sender_funds_enough], on_error=TransactionState.FAILED)
+    @transition(
+        field=state,
+        source=TransactionState.TO_CONFIRM,
+        target=TransactionState.ACCEPTED,
+        conditions=[sender_funds_enough],
+        on_error=TransactionState.FAILED,
+    )
     def parent_accept(self, parent):
         Notification.objects.create(
             recipient=self.sender,
@@ -95,7 +118,9 @@ class Allowance(models.Model):
         related_name='child',
     )
     created_at = models.DateTimeField(auto_now=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
+    )
     frequency = models.PositiveSmallIntegerField(choices=FrequencyType.choices)
     execute_time = models.TimeField(null=True)
     day_of_month = models.IntegerField(
@@ -151,6 +176,7 @@ class Allowance(models.Model):
 
 class Notification(models.Model):
     """Model of notifications."""
+
     recipient = models.ForeignKey(
         'accounts.CustomUser',
         null=True,
@@ -165,6 +191,7 @@ class Notification(models.Model):
 
 class Loan(models.Model):
     """Model of Loans"""
+
     created_at = models.DateTimeField(auto_now=True)
     reason = models.CharField(max_length=255)
     lender = models.ForeignKey(
@@ -181,7 +208,9 @@ class Loan(models.Model):
         on_delete=models.SET_NULL,
         related_name='borrower',
     )
-    amount = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
+    )
     payment_date = models.DateTimeField(null=True, blank=True)
     notify = models.OneToOneField(
         ClockedSchedule,
@@ -197,8 +226,12 @@ class Loan(models.Model):
         payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
         return payoff['amount__sum'] or 0
 
-    @transition(field=state, source=LoanState.PENDING, target=LoanState.GRANTED,
-                conditions=[loan_funds_enough])
+    @transition(
+        field=state,
+        source=LoanState.PENDING,
+        target=LoanState.GRANTED,
+        conditions=[loan_funds_enough],
+    )
     def grant(self):
         transaction = Transaction.objects.create(
             sender=self.lender,

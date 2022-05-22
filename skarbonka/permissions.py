@@ -20,6 +20,7 @@ class FamilyAllowancesPermissions(permissions.BasePermission):
 
 class LoanObjectPermissions(permissions.BasePermission):
     """Permission to object of Loan."""
+
     def has_object_permission(self, request, view, obj):
         return (
             obj.lender == request.user or obj.borrower == request.user or request.user.is_superuser
@@ -28,6 +29,7 @@ class LoanObjectPermissions(permissions.BasePermission):
 
 class LoanObjectBorrowerPermissions(permissions.BasePermission):
     """Checking whether the user is a borrower."""
+
     def has_object_permission(self, request, view, obj):
         return obj.borrower == request.user or request.user.is_superuser
 
@@ -59,6 +61,7 @@ class ParentPatchPermissions(permissions.BasePermission):
 
 class OwnObjectOrParentOfFamilyPermissions(permissions.BasePermission):
     """Permission for object owner or parent of owner."""
+
     def has_object_permission(self, request, view, obj):
         parent = (
             request.user.family == obj.sender.family and request.user.user_type == UserType.PARENT
@@ -66,7 +69,7 @@ class OwnObjectOrParentOfFamilyPermissions(permissions.BasePermission):
         return obj.sender == request.user or parent
 
 
- class FamilyTransacionPermissions(permissions.BasePermission):
+class FamilyTransacionPermissions(permissions.BasePermission):
     """Family members access."""
 
     def has_object_permission(self, request, view, obj):
