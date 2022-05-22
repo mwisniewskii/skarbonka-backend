@@ -40,7 +40,7 @@ class CustomRegisterSerializer(RegisterSerializer):
         adapter = get_adapter()
         user = adapter.new_user(request)
         self.cleaned_data = self.get_cleaned_data()
-        family = Family.objects.create(name=self.cleaned_data["last_name"])
+        family = Family.objects.create()
         user.family = family
         adapter.save_user(request, user, self)
         setup_user_email(request, user, [])

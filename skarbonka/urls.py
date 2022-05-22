@@ -43,6 +43,6 @@ urlpatterns = [
     path("deposit/", userDeposit, name="deposits"),
     path("loans/<int:loan_id>/pay-off/", loanPayoff, name="loanpayoff"),
     path("withdraw/", withdraw, name="withdraw"),
-    path("withdraw/<int:pk>/", withdrawDetail, name="withdraws-detail"),
     path("users/<int:user_id>/withdraws/", withdraws, name="withdraws"),
+    path("users/<int:user_id>/withdraws/<int:pk>", withdrawDetail, name="withdraws-detail"),
 ]
