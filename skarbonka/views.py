@@ -171,10 +171,21 @@ class DepositViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthenticatedPermissions,)
 
     def perform_create(self, serializer):
-        serializer.save(
+        return serializer.save(
             recipient=self.request.user, title='deposit', types=TransactionType.DEPOSIT
         )
 
+    def create(self, request, *args, **kwargs):
+        """Method require implemented method perform_create which returns transaction object."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        obj = self.perform_create(serializer)
+        if can_proceed(obj.accept):
+            obj.accept()
+            obj.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 @method_decorator(name='list', decorator=loan_schema)
 @method_decorator(name='retrieve', decorator=loan_schema)
