@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     'django_celery_beat',
     'drf_yasg',
+    'django_fsm',
     'corsheaders',
     "accounts",
     "skarbonka",

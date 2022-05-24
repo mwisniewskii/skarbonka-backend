@@ -31,7 +31,7 @@ urlpatterns = [
         name='account_confirm_email',
     ),
     path(
-        "auth/password/reset-confirm/<uidb64>/<token>/",
+        "confirmResetPassword/<uidb64>/<token>/",
         TemplateView.as_view(),
         name="password_reset_confirm",
     ),

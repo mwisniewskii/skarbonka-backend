@@ -10,11 +10,12 @@ class TransactionType(models.IntegerChoices):
     ALLOWANCE = 5, 'Allowance'
 
 
-class TransactionStatus(models.IntegerChoices):
+class TransactionState(models.TextChoices):
     ACCEPTED = 1, 'Accepted'
     PENDING = 2, 'Pending'
     FAILED = 3, 'Failed'
     DECLINED = 4, 'Declined'
+    TO_CONFIRM = 5, 'Require Confirmation'
 
 
 class FrequencyType(models.IntegerChoices):
@@ -23,15 +24,7 @@ class FrequencyType(models.IntegerChoices):
     MONTHLY = 3, 'Monthly'
 
 
-class NotificationType(models.IntegerChoices):
-    NONE = 1, 'None'
-    TRANSACTION = 2, 'Transaction'
-    ALLOWANCE = 3, 'Allowance'
-    LOAN = 4, 'Loan'
-    WITHDRAW = 5, 'Withdraw'
-
-
-class LoanStatus(models.IntegerChoices):
+class LoanState(models.IntegerChoices):
     PENDING = 1, 'Pending'
     GRANTED = 2, 'Granted'
     DECLINED = 3, 'Declined'

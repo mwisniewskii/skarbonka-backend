@@ -1,3 +1,7 @@
+# Standard Library
+import datetime
+from decimal import Decimal
+
 # Django
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
@@ -9,14 +13,19 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
-from model_utils import FieldTracker
+from django_fsm import FSMField
+from django_fsm import can_proceed
+from django_fsm import transition
 
 # Local
 from .enum import FrequencyType
-from .enum import LoanStatus
-from .enum import NotificationType
-from .enum import TransactionStatus
+from .enum import LoanState
+from .enum import TransactionState
 from .enum import TransactionType
+from .state_conditions import confirmation_control
+from .state_conditions import loan_funds_enough
+from .state_conditions import period_limit_check
+from .state_conditions import sender_funds_enough
 
 
 class Transaction(models.Model):
@@ -31,14 +40,64 @@ class Transaction(models.Model):
     datetime = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
+    )
     types = models.PositiveSmallIntegerField(
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
-    status = models.PositiveSmallIntegerField(
-        choices=TransactionStatus.choices, default=TransactionStatus.ACCEPTED
+    state = FSMField(choices=TransactionState.choices, default=TransactionState.PENDING)
+
+    @transition(
+        field=state,
+        source=TransactionState.PENDING,
+        target=TransactionState.ACCEPTED,
+        conditions=[sender_funds_enough, period_limit_check],
+        on_error=TransactionState.FAILED,
     )
+    def accept(self):
+        pass
+
+    @transition(
+        field=state,
+        source=TransactionState.PENDING,
+        target=TransactionState.TO_CONFIRM,
+        conditions=[confirmation_control],
+    )
+    def to_confirm(self):
+        notifications = []
+        for parent in self.sender.family.parents:
+            notifications.append(
+                Notification(
+                    recipient=parent,
+                    content=f"{self.sender} chcę dokonać transakcji na kwotę {self.amount}.",
+                )
+            )
+        Notification.objects.bulk_create(notifications)
+
+    @transition(field=state, source=TransactionState.TO_CONFIRM, target=TransactionState.DECLINED)
+    def decline(self, parent):
+        Notification.objects.create(
+            recipient=self.sender,
+            content=f"Transakcja na kwotę {self.amount} została odrzucona przez {parent}.",
+        )
+
+    @transition(
+        field=state,
+        source=TransactionState.TO_CONFIRM,
+        target=TransactionState.ACCEPTED,
+        conditions=[sender_funds_enough],
+        on_error=TransactionState.FAILED,
+    )
+    def parent_accept(self, parent):
+        Notification.objects.create(
+            recipient=self.sender,
+            content=f"Transakcja na kwotę {self.amount} została zaakceptowana przez {parent}.",
+        )
+
+    def retry(self):
+        pass
 
 
 class Allowance(models.Model):
@@ -59,7 +118,9 @@ class Allowance(models.Model):
         related_name='child',
     )
     created_at = models.DateTimeField(auto_now=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
+    )
     frequency = models.PositiveSmallIntegerField(choices=FrequencyType.choices)
     execute_time = models.TimeField(null=True)
     day_of_month = models.IntegerField(
@@ -81,6 +142,7 @@ class Allowance(models.Model):
         return super().delete(*args, **kwargs)
 
     def setup_task(self):
+        """Setup new task for celery beat."""
         self.task = PeriodicTask.objects.create(
             name=f'Allowance {self.pk} ',
             task='admit_allowance',
@@ -92,6 +154,7 @@ class Allowance(models.Model):
 
     @property
     def interval(self):
+        """Get crontab schedule object."""
         if self.frequency == FrequencyType.DAILY:
             crontab, _ = CrontabSchedule.objects.get_or_create(
                 hour=self.execute_time.hour, minute=self.execute_time.minute, day_of_week='*'
@@ -112,6 +175,7 @@ class Allowance(models.Model):
 
 
 class Notification(models.Model):
+    """Model of notifications."""
 
     recipient = models.ForeignKey(
         'accounts.CustomUser',
@@ -122,11 +186,12 @@ class Notification(models.Model):
     )
     content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now=True)
-    resource = models.PositiveSmallIntegerField(choices=NotificationType.choices, default=1)
-    target = models.PositiveIntegerField(null=True, blank=True)
+    url = models.CharField(max_length=255, null=True, blank=True)
 
 
 class Loan(models.Model):
+    """Model of Loans"""
+
     created_at = models.DateTimeField(auto_now=True)
     reason = models.CharField(max_length=255)
     lender = models.ForeignKey(
@@ -143,10 +208,9 @@ class Loan(models.Model):
         on_delete=models.SET_NULL,
         related_name='borrower',
     )
-    status = models.PositiveSmallIntegerField(
-        choices=LoanStatus.choices, default=LoanStatus.PENDING
+    amount = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))]
     )
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateTimeField(null=True, blank=True)
     notify = models.OneToOneField(
         ClockedSchedule,
@@ -154,9 +218,65 @@ class Loan(models.Model):
         null=True,
         blank=True,
     )
-    status_tracker = FieldTracker(fields=['status'])
+    state = FSMField(choices=LoanState.choices, default=LoanState.PENDING)
 
     @property
-    def paid(self) -> int:
+    def paid(self) -> Decimal:
+        """Repaid loan amount."""
         payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
         return payoff['amount__sum'] or 0
+
+    @transition(
+        field=state,
+        source=LoanState.PENDING,
+        target=LoanState.GRANTED,
+        conditions=[loan_funds_enough],
+    )
+    def grant(self):
+        transaction = Transaction.objects.create(
+            sender=self.lender,
+            recipient=self.borrower,
+            title=f'Pożyczka od {self.lender} dla {self.borrower}',
+            amount=self.amount,
+            types=TransactionType.LOAN,
+        )
+        if can_proceed(transaction.accept):
+            transaction.accept()
+            transaction.save()
+        self.notify = PeriodicTask.objects.create(
+            name=f'Payment notify {self.pk} ',
+            task='loan_payment_date_notification',
+            clocked=ClockedSchedule.objects.create(
+                clocked_time=self.payment_date - datetime.timedelta(7)
+            ),
+            args=[self.payment_date, self.borrower.id, self.id],
+            start_time=timezone.now(),
+        )
+        self.save()
+        Notification.objects.create(
+            recipient=self.borrower,
+            content=f'Pożyczka na kwotę {self.amount} została przyznana, termin jej spłaty to {self.payment_date}',
+        )
+
+    @transition(field=state, source=LoanState.PENDING, target=LoanState.GRANTED)
+    def decline(self):
+        Notification.objects.create(
+            recipient=self.borrower,
+            content=f'Pożyczka na kwotę {self.amount} została odrzucona.',
+        )
+
+    @transition(field=state, source=[LoanState.GRANTED, LoanState.EXPIRED], target=LoanState.PAID)
+    def pay_off(self):
+        Notification.objects.create(
+            recipient=self.borrower,
+            content=f'{self.borrower} spłacił pożyczkę z terminem spłaty do {self.payment_date}.',
+        )
+        self.notify.delete()
+
+    @transition(field=state, source=LoanState.GRANTED, target=LoanState.EXPIRED)
+    def expire(self):
+        Notification.objects.create(
+            recipient=self.borrower,
+            content=f'Upłyną',
+        )
+        self.notify.delete()
