@@ -38,7 +38,7 @@ from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
 from .serializers import TransactionSerializer
 from .serializers import WithdrawSerializer
-from .swagger_schemas import loan_schema
+from .swagger_schemas import loan_schema, withdraw_post_schema
 
 
 class TransactionCreateMixin:
@@ -47,21 +47,18 @@ class TransactionCreateMixin:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
-
+        if not can_proceed(obj.accept):
+            return Response(
+                {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
+            )
         if can_proceed(obj.to_confirm):
             obj.to_confirm()
             obj.save()
             return Response(
                 {"message": "Transaction must be accepted by parent."}, status.HTTP_202_ACCEPTED
             )
-
-        if can_proceed(obj.accept):
-            obj.accept()
-            obj.save()
-            return Response(
-                {"message": "Not enough funds on the account!"}, status.HTTP_400_BAD_REQUEST
-            )
-
+        obj.accept()
+        obj.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -174,10 +171,21 @@ class DepositViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthenticatedPermissions,)
 
     def perform_create(self, serializer):
-        serializer.save(
+        return serializer.save(
             recipient=self.request.user, title='deposit', types=TransactionType.DEPOSIT
         )
 
+    def create(self, request, *args, **kwargs):
+        """Method require implemented method perform_create which returns transaction object."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        obj = self.perform_create(serializer)
+        if can_proceed(obj.accept):
+            obj.accept()
+            obj.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 @method_decorator(name='list', decorator=loan_schema)
 @method_decorator(name='retrieve', decorator=loan_schema)
@@ -245,7 +253,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class LoanPayoffViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+class LoanPayoffViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     serializer_class = LoanPayoffSerializer
     permission_classes = (AuthenticatedPermissions,)
@@ -262,7 +270,8 @@ class LoanPayoffViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
         )
 
 
-class WithdrawViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+@method_decorator(name='create', decorator=withdraw_post_schema)
+class WithdrawViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     permission_classes = (
         AuthenticatedPermissions,

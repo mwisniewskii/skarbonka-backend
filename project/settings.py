@@ -126,11 +126,10 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-BASE_URL = "http://api.mwis.pl"
+BASE_URL = "https://api.mwis.pl"
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Warsaw"
-
 USE_I18N = True
 
 USE_TZ = True

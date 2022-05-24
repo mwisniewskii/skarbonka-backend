@@ -2,6 +2,8 @@
 import datetime
 
 # Project
+from django.utils import timezone
+
 from accounts.enum import ControlType
 from skarbonka.enum import TransactionType
 
@@ -19,7 +21,7 @@ def sender_funds_enough(instance):
 def period_limit_check(instance):
     if instance.sender:
         if instance.sender.parental_control == ControlType.PERIODIC:
-            period = datetime.datetime.now() - datetime.timedelta(
+            period = timezone.datetime.now() - datetime.timedelta(
                 days=instance.sender.days_limit_period
             )
             return (

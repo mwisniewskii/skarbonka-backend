@@ -3,7 +3,6 @@ from datetime import timedelta
 
 # Django
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 
 # 3rd-party
 from celery import shared_task
@@ -11,6 +10,8 @@ from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
 
 # Project
+from django_fsm import can_proceed
+
 from accounts.models import CustomUser
 
 # Local
@@ -31,12 +32,14 @@ def admit_allowance(sender_id, recipient_id, amount):
         amount=amount,
         types=TransactionType.ALLOWANCE,
     )
-    if transaction.failed:
+    if not can_proceed(transaction.accept):
         Notification.objects.create(
             recipient=sender,
             content=f'Nie udało się przelać kieszonkowego dla {recipient}',
-            target=transaction.id,
         )
+    else:
+        transaction.accept()
+        transaction.save()
 
 
 @shared_task(name='loan_payment_date_notification')
@@ -65,5 +68,4 @@ def loan_payment_date_notification(payment_date, borrower_id, loan_id):
     Notification.objects.create(
         recipient_id=borrower_id,
         content=msg,
-        target=loan_id,
     )

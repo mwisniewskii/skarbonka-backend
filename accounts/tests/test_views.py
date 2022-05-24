@@ -5,14 +5,14 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 # Project
-from accounts.tests.factories import UserFactory
+from accounts.tests.factories import UserFactory, jwt_cookie
 
 
 class UsersCollectionTest(APITestCase):
     def setUp(self):
         self.user = UserFactory()
         self.client = APIClient()
-        self.client.force_authenticate(self.user)
+        self.client.cookies = jwt_cookie(self.user)
 
     def test_get_list_of_family_members(self):
         url = reverse('users')
@@ -20,7 +20,7 @@ class UsersCollectionTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.client.logout()
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_family_member(self):
         url = reverse('users')
@@ -43,16 +43,16 @@ class UsersDetailTest(APITestCase):
         self.user2 = UserFactory()
         self.user3 = UserFactory(family=self.user1.family)
         self.client = APIClient()
-        self.client.force_authenticate(self.user1)
+        self.client.cookies = jwt_cookie(self.user1)
 
-    def test_get_family_list_by_family_member(self):
+
+    def test_get_family_member_by_family_member(self):
         url = reverse('user', args=(self.user1.pk,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_get_family_list_by_stranger(self):
+    def test_get_family_member_by_stranger(self):
         url = reverse('user', args=(self.user2.pk,))
-        self.client.logout()
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -60,7 +60,7 @@ class UsersDetailTest(APITestCase):
         url = reverse('user', args=(self.user1.pk,))
         self.client.logout()
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_update_family_member_name(self):
         url = reverse('user', args=(self.user3.pk,))
@@ -74,7 +74,8 @@ class UsersDetailTest(APITestCase):
         }
         response = self.client.put(url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.client.force_authenticate(self.user2)
+        self.client.cookies = jwt_cookie(self.user2)
+
         response = self.client.put(url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
