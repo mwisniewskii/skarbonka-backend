@@ -1,15 +1,12 @@
 # 3rd-party
-from dj_rest_auth.utils import jwt_encode
-from django.http import SimpleCookie
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 # Project
-from accounts.tests.factories import UserFactory
+from accounts.tests.factories import UserFactory, jwt_cookie
 from accounts.enum import ControlType
-from project import settings
 from skarbonka.enum import TransactionState
 from skarbonka.models import Transaction
 
@@ -19,24 +16,33 @@ class AllowanceTest(APITestCase):
         self.parent = UserFactory()
         self.child = UserFactory(family=self.parent.family)
         self.client = APIClient()
-        self.client.force_authenticate(self.child)
+        self.client.cookies = jwt_cookie(self.child)
 
 
 class NotificationTest(APITestCase):
     def setUp(self):
         self.user = UserFactory()
         self.client = APIClient()
-        self.client.force_authenticate(self.user)
+        self.client.cookies = jwt_cookie(self.user)
 
     def test_notification_get(self):
-        pass
+        response = self.client.post(reverse('notification'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class LoanTest(APITestCase):
     def setUp(self):
+        self.parent = UserFactory()
+        self.child = UserFactory(family=self.parent.family)
+        self.client = APIClient()
+        self.client.cookies = jwt_cookie(self.child)
+        self.url = reverse('withdraw')
+        Transaction.objects.create(recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED)
+
+    def test_loan_request(self):
         pass
 
-    def test_loan(self):
+    def test_loan_accept(self):
         pass
 
 
@@ -45,9 +51,7 @@ class DepositTest(APITestCase):
     def setUp(self):
         self.child = UserFactory()
         self.client = APIClient()
-        token, _ = jwt_encode(self.child)
-        cookies = {settings.JWT_AUTH_COOKIE: token}
-        self.client.cookies = SimpleCookie(cookies)
+        self.client.cookies = jwt_cookie(self.child)
         self.url = reverse('deposits')
 
     def test_deposit(self):
@@ -57,16 +61,13 @@ class DepositTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-
 class WithdrawCreateTest(APITestCase):
 
     def setUp(self):
         self.parent = UserFactory()
         self.child = UserFactory(family=self.parent.family)
         self.client = APIClient()
-        token, _ = jwt_encode(self.child)
-        cookies = {settings.JWT_AUTH_COOKIE: token}
-        self.client.cookies = SimpleCookie(cookies)
+        self.client.cookies = jwt_cookie(self.child)
         self.url = reverse('withdraw')
         Transaction.objects.create(recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED)
 

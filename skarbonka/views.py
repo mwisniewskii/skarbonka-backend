@@ -38,7 +38,7 @@ from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
 from .serializers import TransactionSerializer
 from .serializers import WithdrawSerializer
-from .swagger_schemas import loan_schema
+from .swagger_schemas import loan_schema, withdraw_post_schema
 
 
 class TransactionCreateMixin:
@@ -259,6 +259,7 @@ class LoanPayoffViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
         )
 
 
+@method_decorator(name='create', decorator=withdraw_post_schema)
 class WithdrawViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     permission_classes = (

@@ -1,5 +1,15 @@
 # 3rd-party
 import factory
+from dj_rest_auth.utils import jwt_encode
+from django.http import SimpleCookie
+
+from project import settings
+
+
+def jwt_cookie(user):
+    token, _ = jwt_encode(user)
+    cookies = {settings.JWT_AUTH_COOKIE: token}
+    return SimpleCookie(cookies)
 
 
 class FamilyFactory(factory.django.DjangoModelFactory):

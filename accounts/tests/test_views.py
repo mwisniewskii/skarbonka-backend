@@ -1,23 +1,18 @@
 # 3rd-party
-from dj_rest_auth.utils import jwt_encode
-from django.http import SimpleCookie
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 # Project
-from accounts.tests.factories import UserFactory
-from project import settings
+from accounts.tests.factories import UserFactory, jwt_cookie
 
 
 class UsersCollectionTest(APITestCase):
     def setUp(self):
         self.user = UserFactory()
         self.client = APIClient()
-        token, _ = jwt_encode(self.user)
-        cookies = {settings.JWT_AUTH_COOKIE: token}
-        self.client.cookies = SimpleCookie(cookies)
+        self.client.cookies = jwt_cookie(self.user)
 
     def test_get_list_of_family_members(self):
         url = reverse('users')
@@ -48,9 +43,7 @@ class UsersDetailTest(APITestCase):
         self.user2 = UserFactory()
         self.user3 = UserFactory(family=self.user1.family)
         self.client = APIClient()
-        token, _ = jwt_encode(self.user1)
-        cookies = {settings.JWT_AUTH_COOKIE: token}
-        self.client.cookies = SimpleCookie(cookies)
+        self.client.cookies = jwt_cookie(self.user1)
 
 
     def test_get_family_member_by_family_member(self):
@@ -81,9 +74,7 @@ class UsersDetailTest(APITestCase):
         }
         response = self.client.put(url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        token, _ = jwt_encode(self.user2)
-        cookies = {settings.JWT_AUTH_COOKIE: token}
-        self.client.cookies = SimpleCookie(cookies)
+        self.client.cookies = jwt_cookie(self.user2)
 
         response = self.client.put(url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
