@@ -1,6 +1,8 @@
-# Django
+# Standard Library
 from decimal import Decimal
 from re import S
+
+# Django
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 
@@ -18,7 +20,8 @@ from accounts.models import UserType
 from accounts.permissions import ParentCUDPermissions
 
 # Local
-from .enum import LoanState, TransactionState
+from .enum import LoanState
+from .enum import TransactionState
 from .models import Allowance
 from .models import Loan
 from .models import Notification
@@ -31,16 +34,18 @@ from .permissions import FamilyTransacionPermissions
 from .permissions import LoanObjectPermissions
 from .permissions import OwnObjectOrParentOfFamilyPermissions
 from .permissions import ParentPatchPermissions
-from .serializers import AllowanceSerializer, TransactionDetailSerializer
+from .serializers import AllowanceSerializer
 from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
 from .serializers import LoanChildSerializer
 from .serializers import LoanParentSerializer
 from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
+from .serializers import TransactionDetailSerializer
 from .serializers import TransactionSerializer
 from .serializers import WithdrawSerializer
-from .swagger_schemas import loan_schema, withdraw_post_schema
+from .swagger_schemas import loan_schema
+from .swagger_schemas import withdraw_post_schema
 
 
 class TransactionCreateMixin:
@@ -134,8 +139,14 @@ class TransactionUpdateView(viewsets.ModelViewSet):
     def dispatch(self, request, *args, **kwargs):
         resp = super().dispatch(request, *args, **kwargs)
         obj = self.get_object()
-        if self.request.user.family != obj.sender.family or self.request.user.family != obj.recipient.family:
-            return Response({"message": "This resource does not belong to your family!"}, status.HTTP_403_FORBIDDEN)
+        if (
+            self.request.user.family != obj.sender.family
+            or self.request.user.family != obj.recipient.family
+        ):
+            return Response(
+                {"message": "This resource does not belong to your family!"},
+                status.HTTP_403_FORBIDDEN,
+            )
         return resp
 
     def perform_update(self, serializer):
@@ -246,19 +257,21 @@ class LoanViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         loan = self.perform_update(serializer)
-        
+
         match kwargs['loan_state']:
             case LoanState.GRANTED:
                 if not can_proceed(loan.grant):
                     return Response(
-                        {"message": "Not enough funds on the account!"}, status.HTTP_402_PAYMENT_REQUIRED
+                        {"message": "Not enough funds on the account!"},
+                        status.HTTP_402_PAYMENT_REQUIRED,
                     )
                 loan.grant()
                 loan.save()
             case LoanState.DECLINED:
                 if not can_proceed(loan.decline):
                     return Response(
-                        {"message": "Only pending loans can be declined."}, status.HTTP_400_BAD_REQUEST
+                        {"message": "Only pending loans can be declined."},
+                        status.HTTP_400_BAD_REQUEST,
                     )
                 loan.decline()
                 loan.save()
@@ -275,6 +288,7 @@ class LoanPayoffViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     serializer_class = LoanPayoffSerializer
     permission_classes = (AuthenticatedPermissions,)
+
     def dispatch(self, request, *args, **kwargs):
         self.loan = get_object_or_404(Loan, id=kwargs['loan_id'])
         return super().dispatch(request, *args, **kwargs)
@@ -291,9 +305,12 @@ class LoanPayoffViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if self.loan.loan_state == LoanState.PAID:
-            return Response({"message":f"This loan is repaid!"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"message": f"This loan is repaid!"}, status.HTTP_400_BAD_REQUEST)
         if Decimal(request.data["amount"]) > self.loan.amount:
-            return Response({"message":f"You only have to pay back {self.loan.amount}"}, status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": f"You only have to pay back {self.loan.amount}"},
+                status.HTTP_400_BAD_REQUEST,
+            )
         resp = super().create(request, *args, **kwargs)
         if can_proceed(self.loan.pay_off):
             self.loan.pay_off()

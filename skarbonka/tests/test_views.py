@@ -5,8 +5,9 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 # Project
-from accounts.tests.factories import UserFactory, jwt_cookie
 from accounts.enum import ControlType
+from accounts.tests.factories import UserFactory
+from accounts.tests.factories import jwt_cookie
 from skarbonka.enum import TransactionState
 from skarbonka.models import Transaction
 
@@ -37,7 +38,9 @@ class LoanTest(APITestCase):
         self.client = APIClient()
         self.client.cookies = jwt_cookie(self.child)
         self.url = reverse('withdraw')
-        Transaction.objects.create(recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED)
+        Transaction.objects.create(
+            recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED
+        )
 
     def test_loan_request(self):
         pass
@@ -47,7 +50,6 @@ class LoanTest(APITestCase):
 
 
 class DepositTest(APITestCase):
-
     def setUp(self):
         self.child = UserFactory()
         self.client = APIClient()
@@ -62,14 +64,15 @@ class DepositTest(APITestCase):
 
 
 class WithdrawCreateTest(APITestCase):
-
     def setUp(self):
         self.parent = UserFactory()
         self.child = UserFactory(family=self.parent.family)
         self.client = APIClient()
         self.client.cookies = jwt_cookie(self.child)
         self.url = reverse('withdraw')
-        Transaction.objects.create(recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED)
+        Transaction.objects.create(
+            recipient=self.child, amount=1000, title='', state=TransactionState.ACCEPTED
+        )
 
     def test_withdraw_without_parental_control(self):
         self.assertEqual(1000, self.child.balance)
@@ -93,6 +96,3 @@ class WithdrawCreateTest(APITestCase):
         self.child.save()
         response = self.client.post(self.url, {'amount': 10.0})
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-
-

@@ -13,7 +13,8 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
-from django_fsm import FSMField, FSMIntegerField
+from django_fsm import FSMField
+from django_fsm import FSMIntegerField
 from django_fsm import can_proceed
 from django_fsm import transition
 
@@ -22,7 +23,8 @@ from .enum import FrequencyType
 from .enum import LoanState
 from .enum import TransactionState
 from .enum import TransactionType
-from .state_conditions import confirmation_control, is_paid
+from .state_conditions import confirmation_control
+from .state_conditions import is_paid
 from .state_conditions import loan_funds_enough
 from .state_conditions import period_limit_check
 from .state_conditions import sender_funds_enough
@@ -231,7 +233,9 @@ class Loan(models.Model):
     @property
     def paid(self) -> Decimal:
         """Repaid loan amount."""
-        payoff = Transaction.objects.filter(loan=self, state=TransactionState.ACCEPTED).aggregate(Sum('amount'))
+        payoff = Transaction.objects.filter(loan=self, state=TransactionState.ACCEPTED).aggregate(
+            Sum('amount')
+        )
         return payoff['amount__sum'] or 0
 
     @transition(
@@ -275,7 +279,12 @@ class Loan(models.Model):
             content=f'Pożyczka na kwotę {self.amount} została odrzucona.',
         )
 
-    @transition(field=loan_state, source=[LoanState.GRANTED, LoanState.EXPIRED], target=LoanState.PAID, conditions=[is_paid])
+    @transition(
+        field=loan_state,
+        source=[LoanState.GRANTED, LoanState.EXPIRED],
+        target=LoanState.PAID,
+        conditions=[is_paid],
+    )
     def pay_off(self):
         Notification.objects.create(
             recipient=self.borrower,

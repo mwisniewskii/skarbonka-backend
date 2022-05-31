@@ -5,7 +5,8 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 # Project
-from accounts.tests.factories import UserFactory, jwt_cookie
+from accounts.tests.factories import UserFactory
+from accounts.tests.factories import jwt_cookie
 
 
 class UsersCollectionTest(APITestCase):
@@ -44,7 +45,6 @@ class UsersDetailTest(APITestCase):
         self.user3 = UserFactory(family=self.user1.family)
         self.client = APIClient()
         self.client.cookies = jwt_cookie(self.user1)
-
 
     def test_get_family_member_by_family_member(self):
         url = reverse('user', args=(self.user1.pk,))

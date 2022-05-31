@@ -1,9 +1,10 @@
 # Standard Library
 import datetime
 
-# Project
+# Django
 from django.utils import timezone
 
+# Project
 from accounts.enum import ControlType
 from skarbonka.enum import TransactionType
 

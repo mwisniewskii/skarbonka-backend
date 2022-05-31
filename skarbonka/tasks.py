@@ -8,10 +8,9 @@ from django.utils import timezone
 from celery import shared_task
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
-
-# Project
 from django_fsm import can_proceed
 
+# Project
 from accounts.models import CustomUser
 
 # Local

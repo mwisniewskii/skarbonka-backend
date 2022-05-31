@@ -2,11 +2,12 @@
 from django.urls import path
 
 # Local
-from .views import AllowanceViewSet, TransactionUpdateView
+from .views import AllowanceViewSet
 from .views import DepositViewSet
 from .views import LoanPayoffViewSet
 from .views import LoanViewSet
 from .views import NotificationViewSet
+from .views import TransactionUpdateView
 from .views import TransactionViewSet
 from .views import WithdrawViewSet
 
@@ -16,12 +17,7 @@ allowanceDetail = AllowanceViewSet.as_view(
 )
 
 
-userTransactionList = TransactionViewSet.as_view(
-    {
-        "get": "list",
-        "post": "create"
-    }
-)
+userTransactionList = TransactionViewSet.as_view({"get": "list", "post": "create"})
 transactionDetail = TransactionUpdateView.as_view({"get": "retrieve", "patch": "partial_update"})
 notificationsList = NotificationViewSet.as_view({"get": "list"})
 loanList = LoanViewSet.as_view({"get": "list", "post": "create"})
