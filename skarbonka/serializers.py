@@ -101,12 +101,12 @@ class LoanChildSerializer(serializers.ModelSerializer):
             'reason',
             'lender',
             'amount',
-            'state',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',
         )
-        read_only_fields = ('id', 'created_at', 'payment_date', 'state', 'paid')
+        read_only_fields = ('id', 'created_at', 'payment_date', 'loan_state', 'paid')
 
 
 class LoanParentSerializer(serializers.ModelSerializer):
@@ -118,7 +118,7 @@ class LoanParentSerializer(serializers.ModelSerializer):
             'reason',
             'borrower',
             'amount',
-            'state',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',

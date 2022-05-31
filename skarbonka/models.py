@@ -13,7 +13,7 @@ from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import CrontabSchedule
 from django_celery_beat.models import PeriodicTask
-from django_fsm import FSMField
+from django_fsm import FSMField, FSMIntegerField
 from django_fsm import can_proceed
 from django_fsm import transition
 
@@ -22,7 +22,7 @@ from .enum import FrequencyType
 from .enum import LoanState
 from .enum import TransactionState
 from .enum import TransactionType
-from .state_conditions import confirmation_control
+from .state_conditions import confirmation_control, is_paid
 from .state_conditions import loan_funds_enough
 from .state_conditions import period_limit_check
 from .state_conditions import sender_funds_enough
@@ -47,7 +47,7 @@ class Transaction(models.Model):
         choices=TransactionType.choices, default=TransactionType.ORDINARY
     )
     loan = models.ForeignKey('skarbonka.Loan', null=True, blank=True, on_delete=models.SET_NULL)
-    state = FSMField(choices=TransactionState.choices, default=TransactionState.PENDING)
+    state = FSMIntegerField(choices=TransactionState.choices, default=TransactionState.PENDING)
 
     @transition(
         field=state,
@@ -95,6 +95,14 @@ class Transaction(models.Model):
             recipient=self.sender,
             content=f"Transakcja na kwotę {self.amount} została zaakceptowana przez {parent}.",
         )
+
+    @transition(
+        field=state,
+        source='*',
+        target=TransactionState.FAILED,
+    )
+    def fail(self):
+        pass
 
     def retry(self):
         pass
@@ -213,21 +221,21 @@ class Loan(models.Model):
     )
     payment_date = models.DateTimeField(null=True, blank=True)
     notify = models.OneToOneField(
-        ClockedSchedule,
-        on_delete=models.CASCADE,
+        PeriodicTask,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
-    state = FSMField(choices=LoanState.choices, default=LoanState.PENDING)
+    loan_state = FSMIntegerField(choices=LoanState.choices, default=LoanState.PENDING)
 
     @property
     def paid(self) -> Decimal:
         """Repaid loan amount."""
-        payoff = Transaction.objects.filter(loan=self, failed=False).aggregate(Sum('amount'))
+        payoff = Transaction.objects.filter(loan=self, state=TransactionState.ACCEPTED).aggregate(Sum('amount'))
         return payoff['amount__sum'] or 0
 
     @transition(
-        field=state,
+        field=loan_state,
         source=LoanState.PENDING,
         target=LoanState.GRANTED,
         conditions=[loan_funds_enough],
@@ -247,10 +255,12 @@ class Loan(models.Model):
             name=f'Payment notify {self.pk} ',
             task='loan_payment_date_notification',
             clocked=ClockedSchedule.objects.create(
-                clocked_time=self.payment_date - datetime.timedelta(7)
+                clocked_time=self.payment_date - datetime.timedelta(7),
             ),
             args=[self.payment_date, self.borrower.id, self.id],
             start_time=timezone.now(),
+            one_off=True,
+            enabled=True,
         )
         self.save()
         Notification.objects.create(
@@ -258,22 +268,21 @@ class Loan(models.Model):
             content=f'Pożyczka na kwotę {self.amount} została przyznana, termin jej spłaty to {self.payment_date}',
         )
 
-    @transition(field=state, source=LoanState.PENDING, target=LoanState.GRANTED)
+    @transition(field=loan_state, source=LoanState.PENDING, target=LoanState.DECLINED)
     def decline(self):
         Notification.objects.create(
             recipient=self.borrower,
             content=f'Pożyczka na kwotę {self.amount} została odrzucona.',
         )
 
-    @transition(field=state, source=[LoanState.GRANTED, LoanState.EXPIRED], target=LoanState.PAID)
+    @transition(field=loan_state, source=[LoanState.GRANTED, LoanState.EXPIRED], target=LoanState.PAID, conditions=[is_paid])
     def pay_off(self):
         Notification.objects.create(
             recipient=self.borrower,
             content=f'{self.borrower} spłacił pożyczkę z terminem spłaty do {self.payment_date}.',
         )
-        self.notify.delete()
 
-    @transition(field=state, source=LoanState.GRANTED, target=LoanState.EXPIRED)
+    @transition(field=loan_state, source=LoanState.GRANTED, target=LoanState.EXPIRED)
     def expire(self):
         Notification.objects.create(
             recipient=self.borrower,

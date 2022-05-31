@@ -39,3 +39,7 @@ def confirmation_control(instance):
 
 def loan_funds_enough(instance):
     return instance.lender.balance >= instance.amount
+
+
+def is_paid(instance):
+    return instance.amount <= instance.paid

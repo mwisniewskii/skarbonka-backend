@@ -26,7 +26,7 @@ class NotificationTest(APITestCase):
         self.client.cookies = jwt_cookie(self.user)
 
     def test_notification_get(self):
-        response = self.client.post(reverse('notification'))
+        response = self.client.get(reverse('notification'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
