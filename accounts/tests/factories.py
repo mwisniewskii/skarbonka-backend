@@ -1,8 +1,11 @@
+# Django
+from django.http import SimpleCookie
+
 # 3rd-party
 import factory
 from dj_rest_auth.utils import jwt_encode
-from django.http import SimpleCookie
 
+# Project
 from project import settings
 
 

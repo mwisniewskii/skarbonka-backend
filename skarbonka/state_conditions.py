@@ -1,9 +1,10 @@
 # Standard Library
 import datetime
 
-# Project
+# Django
 from django.utils import timezone
 
+# Project
 from accounts.enum import ControlType
 from skarbonka.enum import TransactionType
 
@@ -39,3 +40,7 @@ def confirmation_control(instance):
 
 def loan_funds_enough(instance):
     return instance.lender.balance >= instance.amount
+
+
+def is_paid(instance):
+    return instance.amount <= instance.paid

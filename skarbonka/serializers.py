@@ -2,7 +2,6 @@
 from rest_framework import serializers
 
 # Local
-
 from .models import Allowance
 from .models import Loan
 from .models import Notification
@@ -25,6 +24,7 @@ class AllowanceSerializer(serializers.ModelSerializer):
             'day_of_week',
         )
         read_only_fields = ('id',)
+
 
 class NotificationSerializer(serializers.ModelSerializer):
     """Allowance for a child serializer."""
@@ -101,12 +101,12 @@ class LoanChildSerializer(serializers.ModelSerializer):
             'reason',
             'lender',
             'amount',
-            'state',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',
         )
-        read_only_fields = ('id', 'created_at', 'payment_date', 'state', 'paid')
+        read_only_fields = ('id', 'created_at', 'payment_date', 'loan_state', 'paid')
 
 
 class LoanParentSerializer(serializers.ModelSerializer):
@@ -118,7 +118,7 @@ class LoanParentSerializer(serializers.ModelSerializer):
             'reason',
             'borrower',
             'amount',
-            'state',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',

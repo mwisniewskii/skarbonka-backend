@@ -4,7 +4,6 @@ import datetime
 # Django
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import Q
 from django.db.models import Sum
 from django.utils import timezone
 
@@ -66,7 +65,7 @@ class CustomUser(AbstractUser):
         if not date_from:
             date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         outcome = Transaction.objects.filter(
-            Q(state=TransactionState.ACCEPTED) | Q(state=TransactionState.PENDING),
+            state=TransactionState.ACCEPTED,
             sender=self,
             datetime__gt=date_from,
         ).aggregate(Sum('amount'))
