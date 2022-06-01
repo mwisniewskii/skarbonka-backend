@@ -108,7 +108,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
 
-class TransactionViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
+class TransactionViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 
     serializer_class = TransactionSerializer
     permission_classes = (FamilyTransacionPermissions,)
@@ -119,7 +119,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionCreateMixin):
         return queryset
 
     def perform_create(self, serializer, *args, **kwargs):
-        serializer.save(
+        return serializer.save(
             sender=self.request.user,
             types=TransactionType.ORDINARY,
         )
