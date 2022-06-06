@@ -1,6 +1,7 @@
 # 3rd-party
 from rest_framework import serializers
-
+#from rest_framework import filters
+from django_filters import rest_framework as filters
 # Local
 from .models import Allowance
 from .models import Loan
@@ -113,3 +114,33 @@ class WithdrawSerializer(serializers.ModelSerializer):
             'sender',
             'datetime',
         )
+
+
+class HistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'sender',
+            'recipient',
+            'datetime',
+            'title',
+            'amount',
+            'types',
+            'loan',
+            'status',
+        )
+
+
+class HistoryFilter(filters.FilterSet):
+    class Meta:
+        model = Transaction
+        fields = [
+            'sender',
+            'recipient',
+            'datetime',
+            'title',
+            'amount',
+            'types',
+            'status',
+        ]

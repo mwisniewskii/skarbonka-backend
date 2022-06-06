@@ -2,14 +2,13 @@
 from django.db.models import Q
 from django.http import QueryDict
 from django.utils.decorators import method_decorator
-
 # 3rd-party
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-
+from django_filters.rest_framework import DjangoFilterBackend
 # Project
 from accounts.models import ControlType
 from accounts.models import CustomUser
@@ -28,7 +27,7 @@ from .permissions import FamilyAllowancesPermissions
 from .permissions import LoanObjectPermissions
 from .permissions import OwnObjectOrParentOfFamilyPermissions
 from .permissions import ParentPatchPermissions
-from .serializers import AllowanceSerializer
+from .serializers import AllowanceSerializer, HistoryFilter
 from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
 from .serializers import LoanChildSerializer
@@ -36,6 +35,8 @@ from .serializers import LoanParentSerializer
 from .serializers import LoanPayoffSerializer
 from .serializers import NotificationSerializer
 from .serializers import WithdrawSerializer
+from .serializers import HistorySerializer
+from .serializers import HistoryFilter
 from .swagger_schemas import loan_schema
 from .utils import period_limit_check
 
@@ -174,3 +175,18 @@ class WithdrawViewSet(viewsets.ModelViewSet):
         resp = super().create(request, *args, **kwargs)
 
         return resp
+
+class HistoryViewset(viewsets.ModelViewSet):
+
+    serializer_class = HistorySerializer
+    permission_classes = (AuthenticatedPermissions,)
+    filterset_class = HistoryFilter
+    filter_backends = [
+        DjangoFilterBackend,
+    ]
+
+    def get_queryset(self):
+        return Transaction.objects.filter(
+            Q(sender=self.kwargs['user_id']) | Q(recipient=self.kwargs['user_id'])
+        )
+        

@@ -60,3 +60,10 @@ class OwnObjectOrParentOfFamilyPermissions(permissions.BasePermission):
             request.user.family == obj.sender.family and request.user.user_type == UserType.PARENT
         )
         return obj.sender == request.user or parent
+
+class HistoryPermissions(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        parent = (
+            request.user.family == obj.sender.family and request.user.user_type == UserType.PARENT
+        )
+        return obj.sender == request.user or parent or obj.recipient == request.user

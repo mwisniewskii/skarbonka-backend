@@ -3,6 +3,7 @@ from django.urls import path
 
 # Local
 from .views import AllowanceViewSet
+from .views import HistoryViewset
 from .views import DepositViewSet
 from .views import LoanPayoffViewSet
 from .views import LoanViewSet
@@ -21,6 +22,7 @@ loanPayoff = LoanPayoffViewSet.as_view({"post": "create"})
 withdraw = WithdrawViewSet.as_view({"post": "create"})
 withdrawDetail = WithdrawViewSet.as_view({"get": "retrieve", "patch": "partial_update"})
 withdraws = WithdrawViewSet.as_view({"get": "list"})
+historylist = HistoryViewset.as_view({"get": "list"})
 
 urlpatterns = [
     path("allowances/", allowanceList, name="allowances"),
@@ -33,4 +35,5 @@ urlpatterns = [
     path("withdraw/", withdraw, name="withdraw"),
     path("withdraw/<int:pk>/", withdrawDetail, name="withdraws-detail"),
     path("users/<int:user_id>/withdraws/", withdraws, name="withdraws"),
+    path("users/<int:user_id>/history/", historylist, name="history"),
 ]
