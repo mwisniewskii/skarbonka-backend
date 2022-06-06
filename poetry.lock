@@ -370,7 +370,6 @@ python-versions = ">=3.7"
 Django = ">=2.2"
 
 [[package]]
-<<<<<<< HEAD
 name = "django-filter"
 version = "21.1"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
@@ -380,14 +379,14 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 Django = ">=2.2"
-=======
+
+[[package]]
 name = "django-fsm"
 version = "2.8.0"
 description = "Django friendly finite state machine support."
 category = "main"
 optional = false
 python-versions = "*"
->>>>>>> origin/main
 
 [[package]]
 name = "django-model-utils"
@@ -1034,11 +1033,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-<<<<<<< HEAD
-content-hash = "cbf871b54918b75e3ad4570a9887687cca5f261e4605a0e0319ac2d76502bbfa"
-=======
 content-hash = "4c570fa841f24105232e4722c58cca39c53a30109e811fb0e50b0f7f7d40da0a"
->>>>>>> origin/main
 
 [metadata.files]
 amqp = [
@@ -1273,15 +1268,12 @@ django-cors-headers = [
     {file = "django-cors-headers-3.11.0.tar.gz", hash = "sha256:eb98389bf7a2afc5d374806af4a9149697e3a6955b5a2dc2bf049f7d33647456"},
     {file = "django_cors_headers-3.11.0-py3-none-any.whl", hash = "sha256:a22be2befd4069c4fc174f11cf067351df5c061a3a5f94a01650b4e928b0372b"},
 ]
-<<<<<<< HEAD
 django-filter = [
     {file = "django-filter-21.1.tar.gz", hash = "sha256:632a251fa8f1aadb4b8cceff932bb52fe2f826dd7dfe7f3eac40e5c463d6836e"},
     {file = "django_filter-21.1-py3-none-any.whl", hash = "sha256:f4a6737a30104c98d2e2a5fb93043f36dd7978e0c7ddc92f5998e85433ea5063"},
-=======
 django-fsm = [
     {file = "django-fsm-2.8.0.tar.gz", hash = "sha256:4649167bf5bd4b2990dd682644d71b52650f120005a98755cfffc1a047a555d2"},
     {file = "django_fsm-2.8.0-py2.py3-none-any.whl", hash = "sha256:cb7230d84fd25d3db9f9473e0a1b9140a61aa46ea88042f73e3cb2760637e92a"},
->>>>>>> origin/main
 ]
 django-model-utils = [
     {file = "django-model-utils-4.2.0.tar.gz", hash = "sha256:e7a95e102f9c9653427eadab980d5d59e1dea972913b9c9e01ac37f86bba0ddf"},
