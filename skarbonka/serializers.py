@@ -36,8 +36,48 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = (
             'content',
             'created_at',
-            'resource',
-            'target',
+            'url',
+        )
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer"""
+
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'title',
+            'description',
+            'amount',
+        )
+
+
+class TransactionDetailSerializer(serializers.ModelSerializer):
+    """Transaction between users serializer."""
+
+    class Meta:
+        model = Transaction
+
+        fields = (
+            'recipient',
+            'sender',
+            'datetime',
+            'title',
+            'description',
+            'amount',
+            'types',
+            'state',
+        )
+        read_only_fields = (
+            'recipient',
+            'sender',
+            'datetime',
+            'title',
+            'description',
+            'amount',
+            'types',
         )
 
 
@@ -62,12 +102,12 @@ class LoanChildSerializer(serializers.ModelSerializer):
             'reason',
             'lender',
             'amount',
-            'status',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',
         )
-        read_only_fields = ('id', 'created_at', 'payment_date', 'status', 'paid')
+        read_only_fields = ('id', 'created_at', 'payment_date', 'loan_state', 'paid')
 
 
 class LoanParentSerializer(serializers.ModelSerializer):
@@ -79,7 +119,7 @@ class LoanParentSerializer(serializers.ModelSerializer):
             'reason',
             'borrower',
             'amount',
-            'status',
+            'loan_state',
             'payment_date',
             'created_at',
             'paid',
@@ -95,7 +135,6 @@ class LoanSampleSerializer(serializers.Serializer):
 class CreateWithdrawSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-
         fields = ('amount',)
 
 
@@ -107,7 +146,7 @@ class WithdrawSerializer(serializers.ModelSerializer):
             'amount',
             'sender',
             'datetime',
-            'status',
+            'state',
         )
         read_only_fields = (
             'amount',

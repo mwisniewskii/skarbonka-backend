@@ -4,33 +4,21 @@ import datetime
 # Django
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import Q
 from django.db.models import Sum
 from django.utils import timezone
 
 # Project
-from skarbonka.enum import TransactionStatus
+from skarbonka.enum import TransactionState
 from skarbonka.models import Transaction
 
 # Local
+from .enum import ControlType
+from .enum import UserType
 from .managers import CustomUserManager
-
-
-class ControlType(models.IntegerChoices):
-    NONE = 1, "None"
-    CONFIRMATION = 2, "Confirmation"
-    PERIODIC = 3, "Periodic limit"
-
-
-class UserType(models.IntegerChoices):
-    PARENT = 1, "Parent"
-    CHILD = 2, "Child"
 
 
 class Family(models.Model):
     """Aggregation of family members."""
-
-    name = models.CharField(max_length=255)
 
     @property
     def parents(self):
@@ -67,7 +55,7 @@ class CustomUser(AbstractUser):
         if not date_from:
             date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         income = Transaction.objects.filter(
-            status=TransactionStatus.ACCEPTED,
+            state=TransactionState.ACCEPTED,
             recipient=self,
             datetime__gt=date_from,
         ).aggregate(Sum('amount'))
@@ -77,7 +65,7 @@ class CustomUser(AbstractUser):
         if not date_from:
             date_from = timezone.now() - datetime.timedelta(days=10 * 365)
         outcome = Transaction.objects.filter(
-            Q(status=TransactionStatus.ACCEPTED) | Q(status=TransactionStatus.PENDING),
+            state=TransactionState.ACCEPTED,
             sender=self,
             datetime__gt=date_from,
         ).aggregate(Sum('amount'))

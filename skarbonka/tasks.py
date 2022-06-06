@@ -3,19 +3,17 @@ from datetime import timedelta
 
 # Django
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 
 # 3rd-party
 from celery import shared_task
 from django_celery_beat.models import ClockedSchedule
 from django_celery_beat.models import PeriodicTask
+from django_fsm import can_proceed
 
 # Project
 from accounts.models import CustomUser
 
 # Local
-from .enum import LoanStatus
-from .enum import NotificationType
 from .enum import TransactionType
 from .models import Loan
 from .models import Notification
@@ -33,13 +31,14 @@ def admit_allowance(sender_id, recipient_id, amount):
         amount=amount,
         types=TransactionType.ALLOWANCE,
     )
-    if transaction.failed:
+    if not can_proceed(transaction.accept):
         Notification.objects.create(
             recipient=sender,
             content=f'Nie udało się przelać kieszonkowego dla {recipient}',
-            resource=NotificationType.TRANSACTION,
-            target=transaction.id,
         )
+    else:
+        transaction.accept()
+        transaction.save()
 
 
 @shared_task(name='loan_payment_date_notification')
@@ -54,10 +53,10 @@ def loan_payment_date_notification(payment_date, borrower_id, loan_id):
     elif notify_days == 0:
         msg = f'Minął termin spłaty pożyczki.'
         clocked_time = payment_date
-        loan.status = LoanStatus.EXPIRED
+        loan.expire()
     else:
         return
-
+    loan.notify.delate()
     loan.notify = PeriodicTask.objects.create(
         name=f'Payment notify {loan_id} {payment_date}',
         task='loan_payment_date_notification',
@@ -65,10 +64,7 @@ def loan_payment_date_notification(payment_date, borrower_id, loan_id):
         args=[payment_date, borrower_id, loan_id],
         start_time=timezone.now(),
     )
-    loan.save()
     Notification.objects.create(
         recipient_id=borrower_id,
         content=msg,
-        resource=NotificationType.LOAN,
-        target=loan_id,
     )
