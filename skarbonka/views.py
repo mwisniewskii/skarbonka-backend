@@ -33,6 +33,7 @@ from .permissions import FamilyTransacionPermissions
 from .permissions import LoanObjectPermissions
 from .permissions import OwnObjectOrParentOfFamilyPermissions
 from .permissions import ParentPatchPermissions
+from .permissions import HistoryPermissions
 from .serializers import AllowanceSerializer, HistoryFilter
 from .serializers import CreateWithdrawSerializer
 from .serializers import DepositSerializer
@@ -369,7 +370,7 @@ class WithdrawViewSet(TransactionCreateMixin, viewsets.ModelViewSet):
 class HistoryViewset(viewsets.ModelViewSet):
 
     serializer_class = HistorySerializer
-    permission_classes = (AuthenticatedPermissions,)
+    permission_classes = (AuthenticatedPermissions, HistoryPermissions,)
     filterset_class = HistoryFilter
     filter_backends = [
         DjangoFilterBackend,

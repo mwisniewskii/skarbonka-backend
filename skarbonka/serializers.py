@@ -169,7 +169,6 @@ class HistorySerializer(serializers.ModelSerializer):
             'amount',
             'types',
             'loan',
-            'status',
         )
 
 
@@ -183,5 +182,4 @@ class HistoryFilter(filters.FilterSet):
             'title',
             'amount',
             'types',
-            'status',
         ]
